@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>AAC/VAC</title>
+	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css" />
+	<link rel="stylesheet" href="mediaelement/build/mediaelementplayer.css" />
+	<link rel="stylesheet" href="css/styles.css" />
+	<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+	<script src="mediaelement/build/mediaelement-and-player.min.js"></script>
+	<script src="https://www.webrtc-experiment.com/RecordRTC.js"></script>
+</head>
+<body>
+	<div class="container">
+		<h1>Proto AAC/VAC</h1>
+		<div>
+			<div class="row">
+				<div class="col-md-6">
+					<h2>Model</h2>
+					<video width="560" height="318" poster="media/poster/poster.jpg" controls="controls" preload="none">
+					    <!-- MP4 for Safari, IE9, iPhone, iPad, Android, and Windows Phone 7 -->
+					    <source type="video/mp4" src="media/video/MattCutts_2011U.mp4" />
+					    <!-- WebM/VP8 for Firefox4, Opera, and Chrome -->
+					    <source type="video/webm" src="media/video/MattCutts_2011U.webm" />
+					    <!-- Ogg/Vorbis for older Firefox and Opera versions -->
+					    <source type="video/ogg" src="myvideo.ogv" />
+
+					    <!-- Flash fallback for non-HTML5 browsers without JavaScript -->
+					    <object width="560" height="318" type="application/x-shockwave-flash" data="flashmediaelement.swf">
+					        <param name="movie" value="flashmediaelement.swf" />
+					        <param name="flashvars" value="controls=true&file=media/video/MattCutts_2011U.mp4" />
+					        <!-- Image as a last resort -->
+					        <img src="media/poster/poster.jpg" width="560" height="318" title="No video playback capabilities" />
+					    </object>
+					</video>
+				</div>
+				<div class="col-md-6">
+					<h2>Recorder</h2>
+
+
+
+
+					    <video id="preview" controls></video>
+
+    <button id="record">Record</button>
+    <button id="stop" disabled>Stop</button>
+    <button id="delete" disabled>Delete your webm/wav files from Server</button>
+
+    <div id="container"></div>
+
+
+
+
+				</div>
+			</div>
+		</div>
+	</div>
+
+    <script>
+        function PostBlob(blob, fileType, fileName) {
+            // FormData
+            var formData = new FormData();
+            formData.append(fileType + '-filename', fileName);
+            formData.append(fileType + '-blob', blob);
+
+            // progress-bar
+            var hr = document.createElement('hr');
+            container.appendChild(hr);
+            var strong = document.createElement('strong');
+            strong.innerHTML = fileType + ' upload progress: ';
+            container.appendChild(strong);
+            var progress = document.createElement('progress');
+            container.appendChild(progress);
+
+            // POST the Blob
+            xhr('save.php', formData, progress, function(fileURL) {
+                container.appendChild(document.createElement('hr'));
+                var mediaElement = document.createElement(fileType);
+                mediaElement.src = location.href + fileURL;
+                mediaElement.controls = true;
+                container.appendChild(mediaElement);
+                mediaElement.play();
+
+                progress.parentNode.removeChild(progress);
+                strong.parentNode.removeChild(strong);
+                hr.parentNode.removeChild(hr);
+            });
+        }
+
+        var record = document.getElementById('record');
+        var stop = document.getElementById('stop');
+        var deleteFiles = document.getElementById('delete');
+
+        var audio = document.querySelector('audio');
+
+        var recordVideo = document.getElementById('record-video');
+        var preview = document.getElementById('preview');
+
+        var container = document.getElementById('container');
+
+        var recordAudio, recordVideo;
+        record.onclick = function() {
+            record.disabled = true;
+            var video_constraints = {
+                mandatory: { },
+                optional: []
+            };
+            navigator.getUserMedia({
+                    audio: true,
+                    video: video_constraints
+                }, function(stream) {
+                    preview.src = window.URL.createObjectURL(stream);
+                    preview.play();
+
+    				// var legalBufferValues = [256, 512, 1024, 2048, 4096, 8192, 16384];
+    				// sample-rates in at least the range 22050 to 96000.
+                    recordAudio = RecordRTC(stream, {
+    					//bufferSize: 16384,
+    					//sampleRate: 45000
+    				});
+
+                    recordVideo = RecordRTC(stream, {
+                        type: 'video'
+                    });
+
+                    recordAudio.startRecording();
+                    recordVideo.startRecording();
+
+                    stop.disabled = false;
+                });
+        };
+
+        var fileName;
+        stop.onclick = function() {
+            record.disabled = false;
+            stop.disabled = true;
+
+            fileName = Math.round(Math.random() * 99999999) + 99999999;
+
+            recordAudio.stopRecording();
+            PostBlob(recordAudio.getBlob(), 'audio', fileName + '.wav');
+
+            recordVideo.stopRecording();
+            PostBlob(recordVideo.getBlob(), 'video', fileName + '.webm');
+
+            preview.src = '';
+            deleteFiles.disabled = false;
+        };
+
+        deleteFiles.onclick = function() {
+            deleteAudioVideoFiles();
+        };
+
+        function deleteAudioVideoFiles() {
+            deleteFiles.disabled = true;
+            if (!fileName) return;
+            var formData = new FormData();
+            formData.append('delete-file', fileName);
+            xhr('delete.php', formData, null, function(response) {
+                console.log(response);
+            });
+            fileName = null;
+            container.innerHTML = '';
+        }
+
+        function xhr(url, data, progress, callback) {
+            var request = new XMLHttpRequest();
+            request.onreadystatechange = function() {
+                if (request.readyState == 4 && request.status == 200) {
+                    callback(request.responseText);
+                }
+            };
+
+            request.onprogress = function(e) {
+                if (progress) progress.value = e.loaded;
+            };
+            request.open('POST', url);
+            request.send(data);
+        }
+
+        window.onbeforeunload = function() {
+            if (!!fileName) {
+                deleteAudioVideoFiles();
+                return 'It seems that you\'ve not deleted audio/video files from the server.';
+            }
+        };
+    </script>
+
+	<script>
+		// using jQuery
+		$('video,audio').mediaelementplayer(
+			{
+				pauseOtherPlayers: false
+			});
+	</script>
+
+</body>
+</html>
