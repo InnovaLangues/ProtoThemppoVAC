@@ -35,11 +35,13 @@ var Recorder = {
 		// Start recording
 		$('body').on('click', '#record-start', this, function (el) {
 			el.data.start();
+			return false;
 		});
 
 		// Stop recording
-		$('body').on('click', '#record-end', this, function (el) {
+		$('body').on('click', '#record-stop', this, function (el) {
 			el.data.stop();
+			return false;
 		});
 	},
 
@@ -95,6 +97,9 @@ var Recorder = {
 	 * Stop recording
 	 */
 	stop: function () {
+		
+		// alert('coucou');
+
 		// Disable start button
 		this.buttonStart.disabled = false;
         this.buttonStop.disabled  = true;	
@@ -104,11 +109,11 @@ var Recorder = {
 
         // Stop audio recorder
         this.recordAudio.stopRecording();
-        TrackManager.save('audio', fileName + '.wav', this.recordAudio.getBlob());
+        TrackManager.save('audio', 'audio' + fileName, this.recordAudio.getBlob());
 
         // Stop video recorder
         this.recordVideo.stopRecording();
-        TrackManager.save('video', fileName + '.webm', this.recordVideo.getBlob());
+        TrackManager.save('video', 'video' + fileName, this.recordVideo.getBlob());
 
         // Stop previewing media device
         this.preview.prop('src', '');

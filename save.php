@@ -14,4 +14,3 @@ foreach(array('video', 'audio') as $type) {
 		echo($uploadDirectory);
     }
 }
-?>

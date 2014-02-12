@@ -11,6 +11,7 @@
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
 	<script src="mediaelement/build/mediaelement-and-player.min.js"></script>
 	<script src="https://www.webrtc-experiment.com/RecordRTC.js"></script>
+    <script type="text/javascript" src="waveform/waveform.js"></script>
 
     <script type="text/javascript" src="js/Recorder.js"></script>
     <script type="text/javascript" src="js/TrackManager.js"></script>
@@ -44,8 +45,8 @@
                             <source type="video/ogg" src="myvideo.ogv" />
 
                             <!-- Flash fallback for non-HTML5 browsers without JavaScript -->
-                            <object class="col-md-12" type="application/x-shockwave-flash" data="flashmediaelement.swf">
-                                <param name="movie" value="mediaelement/flashmediaelement.swf" />
+                            <object class="col-md-12" type="application/x-shockwave-flash" data="mediaelement/build/flashmediaelement.swf">
+                                <param name="movie" value="mediaelement/build/flashmediaelement.swf" />
                                 <param name="flashvars" value="controls=true&file=media/video/MattCutts_2011U.mp4" />
                                 <!-- Image as a last resort -->
                                 <img src="media/poster/poster.jpg" width="560" height="318" title="No video playback capabilities" />
@@ -80,45 +81,43 @@
         <div class="row">
             <div class="col-md-12">
                 <div class="panel panel-default">
-                    <div class="panel-heading">
-                        <div class="pull-right">
-                            <button id="tracks-play" class="btn btn-xs btn-default" role="button" disabled="true">
+                    <div class="pull-right" style="margin-top: 5px; margin-right: 10px;">
+                        <div class="btn-group">
+                            <button id="tracks-play" class="btn btn-sm btn-default" role="button" disabled="true">
                                 <span class="glyphicon glyphicon-play"></span> Play
                             </button>
-                            <button id="tracks-pause" class="btn btn-xs btn-default" role="button" disabled="true">
+                            <button id="tracks-pause" class="btn btn-sm btn-default" role="button" disabled="true">
                                 <span class="glyphicon glyphicon-pause"></span> Pause
                             </button>
-                            <button id="tracks-stop" class="btn btn-xs btn-default" role="button" disabled="true">
+                            <button id="tracks-stop" class="btn btn-sm btn-default" role="button" disabled="true">
                                 <span class="glyphicon glyphicon-stop"></span> Stop
-                            </button>
-
-                            <button id="tracks-delete" class="btn btn-xs btn-danger" role="button" disabled="true">
-                                <span class="glyphicon glyphicon-trash"></span> Delete all tracks
                             </button>
                         </div>
 
+                        <button id="tracks-delete" class="btn btn-sm btn-danger" role="button" disabled="true">
+                            <span class="glyphicon glyphicon-trash"></span> Delete all tracks
+                        </button>
+                    </div>
+
+                    <div class="panel-heading">
                         <span class="glyphicon glyphicon-list"></span> List of recorded tracks
                     </div>
 
-                    <table class="tracks-list table table-stripped">
-                        <tr>
-                            <th>Add to playlist</th>
-                            <th>Preview</th>
-                            <th>Track name</th>
-                            <th>Duration</th>
-                            <th></th>
-                        </tr>
-                        <tr>
-                            <td><input type="checkbox" value="" name=""/></td>
-                            <td></td>
-                            <td>Track name</td>
-                            <td>03:16</td>
-                            <td class="text-right">
-                                <button id="track-delete" class="btn btn-sm btn-danger" role="button">
-                                    <span class="glyphicon glyphicon-trash"></span> Delete track
-                                </button>
-                            </td>
-                        </tr>
+                    <table id="tracks-list" class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Add to playlist</th>
+                                <th>Preview</th>
+                                <th>Track name</th>
+                                <th>Duration</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="no-track">
+                                <td colspan="5" class="text-center"><em>You have no recorded track.</em></td>
+                            </tr>
+                        </tbody>
                     </table>
                 </div>
             </div>
