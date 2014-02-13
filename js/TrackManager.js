@@ -44,14 +44,6 @@ var TrackManager = {
 			return false;
 		});
 
-		// Download a track
-		$('body').on('click', '.track-download', this, function (el) {
-			// Get track name
-			var trackToDownload = $(this).parents('tr').prop('id');
-			el.data.downloadTrack(trackToDownload);
-			return false;
-		});
-
 		// Delete a track
 		$('body').on('click', '.track-delete', this, function (el) {
 			// Get track name
@@ -98,9 +90,10 @@ var TrackManager = {
         html += '    <td class="text-right">';
 
         // Download button
-        html += '        <button class="track-download btn btn-sm btn-default" role="button">';
+        var file = fileName + ('audio' === fileType ? '.wav' : '.webm');
+        html += '        <a href="download.php?file=' + file + '" target="_blank" class="track-download btn btn-sm btn-default" role="button">';
         html += '            <span class="glyphicon glyphicon-download-alt"></span> Download track';
-        html += '        </button>';
+        html += '        </a>';
 
         // Delete button
         html += '        <button class="track-delete btn btn-sm btn-danger" role="button">';
@@ -151,10 +144,6 @@ var TrackManager = {
 	        request.open('POST', 'delete.php');
         	request.send(formData);
 	    }
-	},
-
-	downloadTrack: function (fileName) {
-
 	},
 
 	deleteAllTracks: function () {
