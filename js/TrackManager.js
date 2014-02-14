@@ -8,6 +8,8 @@ var TrackManager = {
 
 	tracks: [],
 
+	playing: {},
+
 	initialize: function () {
 		// Load tracks
 		this.loadTracks();
@@ -55,6 +57,33 @@ var TrackManager = {
 			return false;
 		});
 
+		$('body').on('change', '.track-select', this, function (el) {
+			var checked = $('.track-select:checked').length;
+			if ($(this).is(':checked')) {
+				el.data.buttonPlay.prop('disabled', false);
+
+				if (checked === el.data.tracks.length) {
+					$('#tracks-select').prop('checked', true);
+					$('#tracks-select').prop('indeterminate', false);
+				}
+				else {
+					$('#tracks-select').prop('checked', false);
+					$('#tracks-select').prop('indeterminate', true);
+				}
+			}
+			else {
+				if (0 === checked) {
+					el.data.buttonPlay.prop('disabled', true);
+					$('#tracks-select').prop('checked', false);
+					$('#tracks-select').prop('indeterminate', false);
+				}
+				else {
+					$('#tracks-select').prop('checked', false);
+					$('#tracks-select').prop('indeterminate', true);
+				}
+			}
+		});
+
 		// Delete a track
 		$('body').on('click', '.track-delete', this, function (el) {
 			// Get track name
@@ -78,11 +107,10 @@ var TrackManager = {
 		var html = '';
 		html += '<tr id="' + track.name + '">';
 
-		// Add track info
-        html += '    <td><input type="checkbox" value="" name=""/></td>';
-        html += '    <td></td>';
-
-        html += '    <td>';
+        html += '    <td><input type="checkbox" class="track-select" name="select-' + track.name + '" id="select-' + track.name + '" value="1" /></td>';
+        
+        // Track name
+		html += '    <td>';
         if ('audio' === track.type) {
         	html += '	<span class="glyphicon glyphicon-music"></span> ';
         }
@@ -92,7 +120,21 @@ var TrackManager = {
         html +=          track.name;
         html += '    </td>';
 
-        html += '    <td></td>';
+        // Media player
+        html += '    <td>';
+        if ('audio' == track.type) {
+        	html += '	<audio id="player-' + track.name + '" controls="true">';
+        	html += '		<source type="audio/wav" src="' + track.url + '" />';
+        	html += '	</audio>';
+        }
+        else {
+        	html += '	<video id="player-' + track.name + '" class="" poster="media/poster/poster.jpg" controls="controls" preload="none">';
+            html += '   	<source type="video/webm" src="' + track.url + '" />';
+            html += '	</video>';
+        }
+        html += '    </td>';
+
+        html += '	 <td id="waveform-' + track.name + '"></td>';
         html += '    <td class="text-right">';
 
         // Download button
@@ -110,6 +152,22 @@ var TrackManager = {
         html += '</tr>';
 
 		this.container.append(html);
+
+		// var waveform = new Waveform({
+		// 	container: document.getElementById('waveform-' + track.name),
+		// 	innerColor: '#333',
+		// 	data: [0.5, 1.0, 0.5, 1.0]
+		// });
+		// Draw waveform
+		/*SC.get(track.url, function (track) {
+			
+
+			waveform.dataFromSoundCloudTrack(track);
+			var streamOptions = waveform.optionsForSyncedStream();
+			SC.stream(track.uri, streamOptions, function(stream) {
+				window.exampleStream = stream;
+			});
+		});*/
 	},
 
 	deleteTrack: function (fileName) {
@@ -124,7 +182,7 @@ var TrackManager = {
 	        formData.append('delete-file', track.url);
 
 	        var request = new XMLHttpRequest();
-	        request.onreadystatechange = function() {
+	        request.onreadystatechange = function () {
 	            if (4 == request.readyState && 200 == request.status) {
 	            	// Remove track from list
 	                manager.container.find('#' + track.name).remove();
@@ -154,11 +212,15 @@ var TrackManager = {
 	},
 
 	selectAllTracks: function () {
+		$('.track-select').prop('checked', true);
 
+		this.buttonPlay.prop('disabled', false);
 	},
 
 	unselectAllTracks: function () {
+		$('.track-select').prop('checked', false);
 
+		this.buttonPlay.prop('disabled', true);
 	},
 
 	deleteAllTracks: function () {
@@ -198,6 +260,18 @@ var TrackManager = {
 		this.buttonPlay.prop('disabled', true);
 		this.buttonPause.prop('disabled', false);
 		this.buttonStop.prop('disabled', false);
+
+		// Start playing selected tracks
+		var toPlay = $('.track-select:checked');
+		toPlay.each(function(index) {
+			// Get track name from ID
+			var id = $(this).prop('id');
+			var name = id.substr(7, id.length);
+
+			// Retrieve and start corresponding player
+			var player = $('#player-' + name).get(0);
+			player.play();
+		})
 	},
 
 	pause: function () {
@@ -231,11 +305,15 @@ var TrackManager = {
 		var request = new XMLHttpRequest();
         request.onreadystatechange = function() {
             if (4 == request.readyState && 200 == request.status) {
+            	console.log(request.responseText);
             	if ('error' != request.responseText) {
             		var track = JSON.parse(request.responseText);
 
             		// Display new track in list
         			manager.addTrack(track);
+            	}
+            	else {
+            		console.log('error');
             	}
             }
         };

@@ -26,6 +26,7 @@ var Recorder = {
 
 		// Init recorder
 		this.connection = new RTCMultiConnection();
+		this.connection.connect();
 		this.connection.onstream = function (e) {
 			e.type == 'local';
 			recorder.currentStream = e.streamid;
@@ -70,23 +71,23 @@ var Recorder = {
 	 * Stop recording
 	 */
 	stop: function () {
-		var recorder = this;
-
 		// Disable start button
 		this.buttonStart.prop('disabled', false);
         this.buttonStop.prop('disabled', true);	
 
         if (typeof this.connection.streams != 'undefined' && this.connection.streams != null && this.connection.streams.length != 0
         	&& typeof this.connection.streams[this.currentStream] != 'undefined' && this.connection.streams[this.currentStream] != null && this.connection.streams[this.currentStream].length != 0) {
+	        
+			var recorder = this;
 	        this.connection.streams[this.currentStream].stopRecording(function(audioBlob, videoBlob) {
 		        // Generate unique name
 		        var fileName = Math.round(Math.random() * 99999999) + 99999999;
 
-		        // Stop audio recorder
-		        TrackManager.save('audio', 'audio' + fileName, audioBlob);
-
 		        // Stop video recorder
 		        TrackManager.save('video', 'video' + fileName, videoBlob);
+
+		        // Stop audio recorder
+		        TrackManager.save('audio', 'audio' + fileName, audioBlob);
 
 		        recorder.stopPreview();
 		        recorder.connection.close();

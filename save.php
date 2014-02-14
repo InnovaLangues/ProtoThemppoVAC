@@ -1,21 +1,24 @@
 <?php
+ini_set('display_errors', 'on');
+
 // Muaz Khan     - https://github.com/muaz-khan 
 // MIT License   - https://www.webrtc-experiment.com/licence/
 // Documentation - https://github.com/muaz-khan/WebRTC-Experiment/tree/master/RecordRTC
-foreach(array('video', 'audio') as $type) {
-    if (isset($_FILES["${type}-blob"])) {
-		$fileName = $_POST["${type}-filename"];
-        $uploadDirectory = "uploads/$fileName";
-        
-        if (!move_uploaded_file($_FILES["${type}-blob"]["tmp_name"], $uploadDirectory)) {
+foreach (array('video', 'audio') as $type) {
+    if (isset($_FILES[$type . '-blob'])) {
+		$filename = trim($_POST[$type . '-filename']);
+        $path = trim('uploads/' . $filename);
+
+        echo $path;
+        if (!move_uploaded_file($_FILES[$type . '-blob']['tmp_name'], $path)) {
             echo 'error';
         }
 		else {
-			$fileInfo = pathinfo($uploadDirectory);
+			$fileInfo = pathinfo($path);
 			$track = array (
 	    		'type' => 'wav' == $fileInfo['extension'] ? 'audio' : 'video',
 	    		'name' => $fileInfo['filename'],
-	    		'url'  => $uploadDirectory,
+	    		'url'  => $path,
 	    	);
 
 			echo json_encode($track);
