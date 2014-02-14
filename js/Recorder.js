@@ -1,10 +1,5 @@
 var Recorder = {
 	/**
-	 * Preview user Webcam
-	 */
-	preview: null,
-
-	/**
 	 * Start recording HTML button
 	 */
 	buttonStart: null,
@@ -14,15 +9,11 @@ var Recorder = {
 	 */
 	buttonStop:  null,
 
-	/**
-	 * Current video recorder
-	 */
-	recordVideo: null,
+	preview: null,
 
-	/**
-	 * Current audio recorder
-	 */
-	recordAudio: null,
+	connection: null,
+
+	currentStream: null,
 
 	/**
 	 * Initialize the recorder
@@ -30,7 +21,23 @@ var Recorder = {
 	initialize: function () {
 		this.buttonStart = $('#record-start');
 		this.buttonStop  = $('#record-stop');
-		this.preview     = $('#record-preview');
+
+		var recorder = this;
+
+		// Init recorder
+		this.connection = new RTCMultiConnection();
+		this.connection.onstream = function (e) {
+			e.type == 'local';
+			recorder.currentStream = e.streamid;
+			recorder.preview = e.mediaElement;
+
+			recorder.startPreview();
+
+			recorder.connection.streams[recorder.currentStream].startRecording({
+		        audio: true,
+		        video: true
+		    });
+		};
 
 		// Start recording
 		$('body').on('click', '#record-start', this, function (el) {
@@ -49,73 +56,55 @@ var Recorder = {
 	 * Start recording
 	 */
 	start: function () {
+		var recorder = this;
+
+		this.connection.sessionid = (Math.random() * 999999999999).toString().replace('.', '');
+		this.connection.open();
+
 		// Disable record button
 		this.buttonStart.prop('disabled', true);
-
-        // Get the correct Media device for current browser
-        navigator.getMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
-
-        var recorder = this;
-
-		// Try to enable media device
-        navigator.getMedia(
-        	// Constraints
-        	{ audio: true, video: true }, 
-
-        	// Success callback => start recording
-        	function (stream) {
-        		// Start preview
-        		var preview = recorder.preview.get(0);
-        		preview.src = window.URL.createObjectURL(stream);
-        		preview.play();
-
-				// Initialize audio recorder
-	            recorder.recordAudio = RecordRTC(stream, {
-					//bufferSize: 16384,
-					//sampleRate: 45000
-				});
-
-	            // initialize video recorder
-	            recorder.recordVideo = RecordRTC(stream, {
-	                type: 'video'
-	            });
-
-	            recorder.recordAudio.startRecording();
-	            recorder.recordVideo.startRecording();
-
-	            // Enable stop recording button
-	            recorder.buttonStop.prop('disabled', false);
-        	},
-
-        	function (err) {
-        		return false;
-        	}
-        );
+		this.buttonStop.prop('disabled', false);
 	},
 
 	/**
 	 * Stop recording
 	 */
 	stop: function () {
-		
-		// alert('coucou');
+		var recorder = this;
 
 		// Disable start button
-		this.buttonStart.disabled = false;
-        this.buttonStop.disabled  = true;	
+		this.buttonStart.prop('disabled', false);
+        this.buttonStop.prop('disabled', true);	
 
-        // Generate unique name
-        var fileName = Math.round(Math.random() * 99999999) + 99999999;
+        if (typeof this.connection.streams != 'undefined' && this.connection.streams != null && this.connection.streams.length != 0
+        	&& typeof this.connection.streams[this.currentStream] != 'undefined' && this.connection.streams[this.currentStream] != null && this.connection.streams[this.currentStream].length != 0) {
+	        this.connection.streams[this.currentStream].stopRecording(function(audioBlob, videoBlob) {
+		        // Generate unique name
+		        var fileName = Math.round(Math.random() * 99999999) + 99999999;
 
-        // Stop audio recorder
-        this.recordAudio.stopRecording();
-        TrackManager.save('audio', 'audio' + fileName, this.recordAudio.getBlob());
+		        // Stop audio recorder
+		        TrackManager.save('audio', 'audio' + fileName, audioBlob);
 
-        // Stop video recorder
-        this.recordVideo.stopRecording();
-        TrackManager.save('video', 'video' + fileName, this.recordVideo.getBlob());
+		        // Stop video recorder
+		        TrackManager.save('video', 'video' + fileName, videoBlob);
 
-        // Stop previewing media device
-        this.preview.prop('src', '');
+		        recorder.stopPreview();
+		        recorder.connection.close();
+	        });
+    	}
+	},
+
+	startPreview: function () {
+		this.preview.className = 'col-md-12';
+		this.preview.volume = 1;
+		this.preview.muted = false;
+		this.preview.controls = false;
+
+		$('#recorder').empty().append(this.preview);
+	},
+
+	stopPreview: function () {
+		this.preview.pause();
+		$('#recorder').empty().append('<img src="media/poster/poster.jpg" class="col-md-12" />');
 	}
 };

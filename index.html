@@ -10,6 +10,8 @@
 	
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
 	<script src="mediaelement/build/mediaelement-and-player.min.js"></script>
+
+    <script src="https://www.webrtc-experiment.com/RTCMultiConnection-v1.6.min.js"> </script>
 	<script src="https://www.webrtc-experiment.com/RecordRTC.js"></script>
     <script type="text/javascript" src="waveform/waveform.js"></script>
 
@@ -31,7 +33,7 @@
                     <div class="panel-body">
                         <p class="text-center">I think there will be some instructions here to help students.</p>
 
-                        <video class="text-center col-md-12" poster="media/poster/poster.jpg" controls="controls" preload="none">
+                        <video id="model" class="text-center col-md-12" poster="media/poster/poster.jpg" controls="controls" preload="none">
                             <!-- MP4 for Safari, IE9, iPhone, iPad, Android, and Windows Phone 7 -->
                             <source type="video/mp4" src="media/video/MattCutts_2011U.mp4" />
                             <!-- WebM/VP8 for Firefox4, Opera, and Chrome -->
@@ -56,18 +58,25 @@
                     <div class="panel-heading">
                         <span class="glyphicon glyphicon-record"></span> Recorder
                     </div>
+
                     <div class="panel-body">
-                        <video class="text-center col-md-12" poster="media/poster/poster.jpg" id="record-preview" controls></video>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <button id="record-start" class="btn btn-primary" role="button">
+                                    <span class="glyphicon glyphicon-record"></span> Start recording
+                                </button>
+
+                                <button id="record-stop" class="btn btn-default" role="button" disabled="true">
+                                    <span class="glyphicon glyphicon-stop"></span> Stop recording
+                                </button>       
+                            </div>
                             
-                        <br/>
+                            <br/>
 
-                        <button id="record-start" class="btn btn-primary" role="button">
-                            <span class="glyphicon glyphicon-record"></span> Start recording
-                        </button>
-
-                        <button id="record-stop" class="btn btn-default" role="button" disabled="true">
-                            <span class="glyphicon glyphicon-stop"></span> Stop recording
-                        </button>
+                            <div id="recorder">
+                                <img src="media/poster/poster.jpg" class="col-md-12" />
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -97,11 +106,15 @@
                     <div class="panel-heading">
                         <span class="glyphicon glyphicon-list"></span> List of recorded tracks
                     </div>
+                    
+                    <div class="panel-body">
+                        <em class="text-info"><span class="glyphicon glyphicon-info-sign"></span> Select all tracks you want to play</em>
+                    </div>
 
                     <table id="tracks-list" class="table table-striped table-hover">
                         <thead>
                             <tr>
-                                <th>Add to playlist</th>
+                                <th><input type="checkbox" name="tracks-select" id="tracks-select" /></th>
                                 <th>Preview</th>
                                 <th>Track name</th>
                                 <th>Duration</th>

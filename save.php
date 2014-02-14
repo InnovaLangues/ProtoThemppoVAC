@@ -8,9 +8,17 @@ foreach(array('video', 'audio') as $type) {
         $uploadDirectory = "uploads/$fileName";
         
         if (!move_uploaded_file($_FILES["${type}-blob"]["tmp_name"], $uploadDirectory)) {
-            echo(" problem moving uploaded file");
+            echo 'error';
         }
-		
-		echo($uploadDirectory);
+		else {
+			$fileInfo = pathinfo($uploadDirectory);
+			$track = array (
+	    		'type' => 'wav' == $fileInfo['extension'] ? 'audio' : 'video',
+	    		'name' => $fileInfo['filename'],
+	    		'url'  => $uploadDirectory,
+	    	);
+
+			echo json_encode($track);
+		}
     }
 }

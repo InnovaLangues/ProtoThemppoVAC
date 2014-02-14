@@ -1,6 +1,4 @@
 <?php
-ini_set('display_errors', 'on');
-
 $path = 'uploads/';
 $tracks = array ();
 
@@ -16,7 +14,7 @@ if ($directory) {
             	// Audio or video file
             	$tracks[] = array (
             		'type' => 'wav' == $fileInfo['extension'] ? 'audio' : 'video',
-            		'name' => substr($entry, 0, strlen($entry) - (strlen($fileInfo['extension']) + 1)),
+            		'name' => $fileInfo['filename'],
             		'url'  => $filename,
             	);
             }

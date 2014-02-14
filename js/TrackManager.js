@@ -6,7 +6,7 @@ var TrackManager = {
 
 	container: null,
 
-	tracks: {},
+	tracks: [],
 
 	initialize: function () {
 		// Load tracks
@@ -44,6 +44,17 @@ var TrackManager = {
 			return false;
 		});
 
+		// Select/Unselect all tracks
+		$('body').on('change', '#tracks-select', this, function (el) {
+			if ($(this).is(':checked')) { // Select all
+				el.data.selectAllTracks();
+			}
+			else { // Unselect all
+				el.data.unselectAllTracks();
+			}
+			return false;
+		});
+
 		// Delete a track
 		$('body').on('click', '.track-delete', this, function (el) {
 			// Get track name
@@ -53,44 +64,39 @@ var TrackManager = {
 		});
 	},
 
-	addTrack: function (fileType, fileName, fileURL) {
-		// Enable play button if needed
-		this.buttonPlay.prop('disabled', false);
+	addTrack: function (track) {
+		// Enable button if needed
 		this.buttonDelete.prop('disabled', false);
 
 		// Add track to list
-		this.tracks[fileName] = {
-			type: fileType,
-			name: fileName,
-			url: fileURL
-		};
+		this.tracks.push(track);
 
 		// Remove no track line if needed
 		this.container.find('.no-track').remove();
 
 		// Display new track
 		var html = '';
-		html += '<tr id="' + fileName + '">';
+		html += '<tr id="' + track.name + '">';
 
 		// Add track info
         html += '    <td><input type="checkbox" value="" name=""/></td>';
         html += '    <td></td>';
 
         html += '    <td>';
-        if ('audio' === fileType) {
+        if ('audio' === track.type) {
         	html += '	<span class="glyphicon glyphicon-music"></span> ';
         }
-        else if ('video' === fileType) {
+        else if ('video' === track.type) {
         	html += '	<span class="glyphicon glyphicon-film"></span> ';
         }
-        html +=          fileName;
+        html +=          track.name;
         html += '    </td>';
 
         html += '    <td></td>';
         html += '    <td class="text-right">';
 
         // Download button
-        var file = fileName + ('audio' === fileType ? '.wav' : '.webm');
+        var file = track.name + ('audio' === track.type ? '.wav' : '.webm');
         html += '        <a href="download.php?file=' + file + '" target="_blank" class="track-download btn btn-sm btn-default" role="button">';
         html += '            <span class="glyphicon glyphicon-download-alt"></span> Download track';
         html += '        </a>';
@@ -104,13 +110,12 @@ var TrackManager = {
         html += '</tr>';
 
 		this.container.append(html);
-
 	},
 
 	deleteTrack: function (fileName) {
 		if (!fileName) return;
 
-		var track = this.tracks[fileName];
+		var track = this.getTrack(fileName);
 		if (typeof track !== 'undefined' && null != track && track.length !== 0) {
 			var manager = this;
 
@@ -123,9 +128,11 @@ var TrackManager = {
 	            if (4 == request.readyState && 200 == request.status) {
 	            	// Remove track from list
 	                manager.container.find('#' + track.name).remove();
-					delete manager.tracks[fileName];
+					
+	                var trackIndex = manager.getTrackIndex(fileName);
+					manager.tracks.splice(trackIndex, 1);
 
-					if (manager.tracks.length === 0) {
+					if (manager.tracks.length == 0) {
 						// Add no track line
 						var html = '';
 						html += '<tr class="no-track">';
@@ -135,8 +142,8 @@ var TrackManager = {
 	                    manager.container.append(html);
 
 	                    // Change buttons state if needed
-						this.buttonPlay.prop('disabled', true);
-						this.buttonDelete.prop('disabled', true);
+						manager.buttonPlay.prop('disabled', true);
+						manager.buttonDelete.prop('disabled', true);
 					}
 	            }
 	        };
@@ -146,17 +153,27 @@ var TrackManager = {
 	    }
 	},
 
+	selectAllTracks: function () {
+
+	},
+
+	unselectAllTracks: function () {
+
+	},
+
 	deleteAllTracks: function () {
 		this.buttonPlay.prop('disabled', true);
 		this.buttonDelete.prop('disabled', true);
 
-		for (var track in this.tracks) {
-			this.deleteTrack(track);
+		for (var i = 0; i < this.tracks.length; i++) {
+			var track = this.tracks[i];
+			this.deleteTrack(track.name);
 		}
 	},
 
 	loadTracks: function () {
 		var manager = this;
+
 		var formData = new FormData();
 		var request = new XMLHttpRequest();
         request.onreadystatechange = function() {
@@ -166,7 +183,7 @@ var TrackManager = {
             	if (typeof tracks != 'undefined' && null != tracks && tracks.length !== 0) {
             		for (var i = 0; i < tracks.length; i++) {
             			var track = tracks[i];
-            			manager.addTrack(track.type, track.name, track.url);
+            			manager.addTrack(track);
             		}
             	}
             }
@@ -210,25 +227,44 @@ var TrackManager = {
         formData.append(fileType + '-filename', file);
         formData.append(fileType + '-blob', blob);
 
-		// Display progressbar
-
 		// Send file to server
 		var request = new XMLHttpRequest();
         request.onreadystatechange = function() {
             if (4 == request.readyState && 200 == request.status) {
-                // Hide progressbar
+            	if ('error' != request.responseText) {
+            		var track = JSON.parse(request.responseText);
 
-        		// Display new track in list
-        		manager.addTrack(fileType, fileName, request.responseText);
+            		// Display new track in list
+        			manager.addTrack(track);
+            	}
             }
         };
 
-        // Update progressbar
-        // request.onprogress = function(e) {
-        //     if (progress) progress.value = e.loaded;
-        // };
-
         request.open('POST', 'save.php');
         request.send(formData);
+	},
+
+	getTrack: function (fileName) {
+		var track = null;
+
+		var trackIndex = this.getTrackIndex(fileName);
+		if (null !== trackIndex) {
+			track = this.tracks[trackIndex];
+		}
+
+		return track;
+	},
+
+	getTrackIndex: function (fileName) {
+		var index = null;
+		for (var i = 0; i < this.tracks.length; i++) {
+			var currentTrack = this.tracks[i];
+			if (fileName == currentTrack['name']) {
+				index = i;
+				break;
+			}
+		}
+
+		return index;	
 	}
 };
