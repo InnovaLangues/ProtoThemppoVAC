@@ -305,8 +305,7 @@ var TrackManager = {
 		var request = new XMLHttpRequest();
         request.onreadystatechange = function() {
             if (4 == request.readyState && 200 == request.status) {
-            	console.log(request.responseText);
-            	if ('error' != request.responseText) {
+            	if (null != request.responseText && request.responseText.length != 0 && 'error' != request.responseText) {
             		var track = JSON.parse(request.responseText);
 
             		// Display new track in list

@@ -81,13 +81,40 @@ var Recorder = {
 			var recorder = this;
 	        this.connection.streams[this.currentStream].stopRecording(function(audioBlob, videoBlob) {
 		        // Generate unique name
-		        var fileName = Math.round(Math.random() * 99999999) + 99999999;
+		        var date = new Date();
+
+				var month = date.getMonth();
+				if (month < 10) {
+					month = '0' + month.toString();
+				}
+
+				var day = date.getDay();
+				if (day < 10) {
+					day = '0' + day.toString();
+				}
+
+				var hours = date.getHours();
+				if (hours < 10) {
+					hours = '0' + hours;
+				}
+
+				var minutes = date.getMinutes();
+				if (minutes < 10) {
+					minutes = '0' + minutes;
+				}
+
+				var seconds = date.getSeconds();
+				if (seconds < 10) {
+					seconds = '0' + seconds;
+				}
+
+				var fileName = date.getFullYear() + '-' + month + '-' + day + '_' + hours + 'h' + minutes + 'm' + seconds;
 
 		        // Stop video recorder
-		        TrackManager.save('video', 'video' + fileName, videoBlob);
+		        TrackManager.save('video', 'video_' + fileName, videoBlob);
 
 		        // Stop audio recorder
-		        TrackManager.save('audio', 'audio' + fileName, audioBlob);
+		        TrackManager.save('audio', 'audio_' + fileName, audioBlob);
 
 		        recorder.stopPreview();
 		        recorder.connection.close();

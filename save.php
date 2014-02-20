@@ -1,5 +1,6 @@
 <?php
 ini_set('display_errors', 'on');
+ini_set('upload_max_filesize', '1G');
 
 // Muaz Khan     - https://github.com/muaz-khan 
 // MIT License   - https://www.webrtc-experiment.com/licence/
@@ -9,8 +10,8 @@ foreach (array('video', 'audio') as $type) {
 		$filename = trim($_POST[$type . '-filename']);
         $path = trim('uploads/' . $filename);
 
-        echo $path;
         if (!move_uploaded_file($_FILES[$type . '-blob']['tmp_name'], $path)) {
+            // echo 'error : ' . $_FILES[$type . '-blob']['error'] ;
             echo 'error';
         }
 		else {
