@@ -89,6 +89,7 @@ var TrackManager = {
 			return false;
 		});
 
+		// Manage Select all state
 		$('body').on('change', '.track-select', this, function (el) {
 			var checked = $('.track-select:checked').length;
 			var $selectAll = $('#tracks-select');
@@ -156,19 +157,23 @@ var TrackManager = {
         html += '	 <td id="duration-' + track.name + '"></td>';
 
         html += '    <td>';
-        // Download button
-        var file = track.name + ('audio' === track.type ? '.wav' : '.webm');
-        html += '        <a href="download.php?file=' + file + '" target="_blank" class="track-download btn btn-sm btn-default" role="button">';
-        html += '            <span class="glyphicon glyphicon-download-alt"></span>';
-        html += '			 <span class="sr-only">Download</span>';
-        html += '        </a>';
+        if (track.downloadable) {
+	        // Download button
+	        var file = track.name + ('audio' === track.type ? '.wav' : '.webm');
+	        html += '	<a href="download.php?file=' + file + '" target="_blank" class="track-download btn btn-sm btn-default" role="button">';
+	        html += '		<span class="glyphicon glyphicon-download-alt"></span>';
+	        html += '		<span class="sr-only">Download</span>';
+	        html += '	</a>';
+        }
 
-        // Delete button
-	    html += '        <button class="track-delete btn btn-sm btn-danger" role="button">';
-	    html += '            <span class="glyphicon glyphicon-trash"></span>';
-	    html += '			 <span class="sr-only">Delete</span>';
-	    html += '        </button>';
-		html += '    </td>';        
+        if (track.deletable) {
+	        // Delete button
+		    html += '	<button class="track-delete btn btn-sm btn-danger" role="button">';
+		    html += '		<span class="glyphicon glyphicon-trash"></span>';
+		    html += '		<span class="sr-only">Delete</span>';
+		    html += '	</button>';
+		}
+		html += '    </td>';
 
 		this.container.append(html);
 
@@ -258,7 +263,7 @@ var TrackManager = {
 						// Add no track line
 						var html = '';
 						html += '<tr class="no-track">';
-	                    html += '    <td colspan="5" class="text-center"><em>You have no recorded track.</em></td>';
+	                    html += '    <td colspan="6" class="text-center"><em>You have no recorded track.</em></td>';
 	                    html += '</tr>';
 
 	                    manager.container.append(html);
@@ -336,29 +341,98 @@ var TrackManager = {
 
 		var manager = this;
 
+		var videos = [];
+
 		// Start playing selected tracks
-		var toPlay = $('.track-select:checked');
-		toPlay.each(function(index) {
-			// Get track name from ID
-			var id = $(this).prop('id');
-			var name = id.substr(7, id.length);
+		var audios = [];
+		var videos = [];
+		$('.track-select:checked').each(function(index) {
+			var name = $(this).parents('tr').prop('id');
 
 			var track = manager.getTrack(name);
 			if ('audio' === track.type) {
-				// Play audio from waveform JS
-				track.waveform.play();
+				audios.push(track);
 			}
 			else {
-				// Play video
+				videos.push(track);
 			}
-
-			manager.playing.push(track);
 		});
 
+		// Start videos
+		this.playVideo(videos);
+
+		// Start audio
+		this.playAudio(audios);
+
 		// Manage buttons state
-		this.togglePlayButton();
-		this.togglePauseButton();
-		this.toggleStopButton();
+		this.togglePlayerButtons();
+	},
+
+	playAudio: function (audios) {
+		if (audios && audios.length !== 0) {
+			var manager = this;
+
+			for (var i = 0; i < audios.length; i++) {
+				var audio = audios[i];
+
+				// Play audio from waveform JS
+				audio.waveform.play();
+				audio.waveform.on('finish', function (e) {
+					manager.deletePlaying(audio.name);
+            		manager.togglePlayerButtons();
+            		// console.log(audio.name + ' is ended');
+				});
+
+				this.playing.push(audio);
+			}
+		}
+	},
+
+	playVideo: function (videos) {
+		// Loop through videos to create mosaic
+		if (videos && videos.length !== 0) {
+			// Calculate size according to number of videos to play
+			switch (videos.length) {
+				case 1:
+					var size = 12;
+					break; 
+				case 2:
+					var size = 6;
+					break;
+				default:
+					var size = 4;
+					break;
+			}
+
+			var manager = this;
+
+			var $player = $('#player');
+			$('#player').empty();
+			for (var i = 0; i < videos.length; i++) {
+				var video = videos[i];
+
+				// Create player HTML
+				var html = '';
+				html += '<video id="player-' + video.name + '" class="col-md-' + size + '" poster="media/poster/poster.jpg" style="padding: 2px;">';
+            	html += '  	<source type="video/webm" src="' + video.url + '" />';
+            	html += '</video>';
+
+            	$player.append(html);
+
+            	// Start player
+            	video.player = $('#player-' + video.name).get(0);
+
+            	video.player.addEventListener('ended', function (e) {
+            		// console.log(video.name + ' is ended');
+            		manager.deletePlaying(video.name);
+            		manager.togglePlayerButtons();
+            	});
+
+            	video.player.play();
+
+            	this.playing.push(video);
+			}
+		}
 	},
 
 	/**
@@ -375,13 +449,12 @@ var TrackManager = {
 			}
 			else {
 				// Video track
+				track.player.pause();
 			}
 		}
 
 		// Manage buttons state
-		this.togglePlayButton();
-		this.togglePauseButton();
-		this.toggleStopButton();
+		this.togglePlayerButtons();
 	},
 
 	/**
@@ -398,13 +471,21 @@ var TrackManager = {
 			}
 			else {
 				// Video track
+				track.player.pause();
+				track.player.currentTime = 0; // Reset time
 			}
 		}
+
+		$('#player').empty().append('<img src="media/poster/poster.jpg" class="col-md-offset-3 col-md-6" />');
 
 		// Remove list of currently playing
 		this.playing = [];
 
 		// Manage buttons state
+		this.togglePlayerButtons();
+	},
+
+	togglePlayerButtons: function () {
 		this.togglePlayButton();
 		this.togglePauseButton();
 		this.toggleStopButton();
@@ -545,5 +626,15 @@ var TrackManager = {
 		}
 
 		return index;	
+	},
+
+	deletePlaying: function (fileName) {
+		for (var i = 0; i < this.playing; i++) {
+			var currentTrack = this.playing[i];
+			if (fileName == currentTrack['name']) {
+				this.playing.splice(i, 1);
+				break;
+			}
+		}
 	}
 };
