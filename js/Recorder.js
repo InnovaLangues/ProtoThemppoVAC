@@ -84,29 +84,24 @@ var Recorder = {
 		        var date = new Date();
 
 				var month = date.getMonth();
-				if (month < 10) {
+				if (month < 10)
 					month = '0' + month.toString();
-				}
 
 				var day = date.getDay();
-				if (day < 10) {
+				if (day < 10)
 					day = '0' + day.toString();
-				}
 
 				var hours = date.getHours();
-				if (hours < 10) {
+				if (hours < 10)
 					hours = '0' + hours;
-				}
 
 				var minutes = date.getMinutes();
-				if (minutes < 10) {
+				if (minutes < 10)
 					minutes = '0' + minutes;
-				}
 
 				var seconds = date.getSeconds();
-				if (seconds < 10) {
+				if (seconds < 10)
 					seconds = '0' + seconds;
-				}
 
 				var fileName = date.getFullYear() + '-' + month + '-' + day + '_' + hours + 'h' + minutes + 'm' + seconds;
 
@@ -123,7 +118,7 @@ var Recorder = {
 	},
 
 	startPreview: function () {
-		this.preview.className = 'col-md-12';
+		this.preview.className = 'col-md-offset-3 col-md-6';
 		this.preview.volume = 1;
 		this.preview.muted = false;
 		this.preview.controls = false;
@@ -133,6 +128,6 @@ var Recorder = {
 
 	stopPreview: function () {
 		this.preview.pause();
-		$('#recorder').empty().append('<img src="media/poster/poster.jpg" class="col-md-12" />');
+		$('#recorder').empty().append('<img src="media/poster/poster.jpg" class="col-md-offset-3 col-md-6" />');
 	}
 };

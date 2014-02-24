@@ -9,10 +9,13 @@
 	<link rel="stylesheet" href="css/styles.css" />
 	
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+    <script type="text/javascript" src="//netdna.bootstrapcdn.com/bootstrap/3.0.2/js/bootstrap.min.js"></script>
 	<script src="mediaelement/build/mediaelement-and-player.min.js"></script>
 
     <script src="https://www.webrtc-experiment.com/RTCMultiConnection-v1.6.min.js"> </script>
 	<script src="https://www.webrtc-experiment.com/RecordRTC.js"></script>
+
+    <script src="wavesurfer/build/wavesurfer.min.js"></script>
 
     <script type="text/javascript" src="js/Recorder.js"></script>
     <script type="text/javascript" src="js/TrackManager.js"></script>
@@ -24,56 +27,61 @@
         </div>
 
         <div class="row">
-            <div class="col-md-6">
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        <span class="glyphicon glyphicon-film"></span> Model
-                    </div>
-                    <div class="panel-body">
-                        <p class="text-center">I think there will be some instructions here to help students.</p>
+            <div class="col-md-12">
+                <ul class="nav nav-tabs" style="border-bottom: none;">
+                    <li class="active">
+                        <a href="#tab-player" data-toggle="tab"><span class="glyphicon glyphicon-play"></span> Player</a>
+                    </li>
+                    <li>
+                        <a href="#tab-recorder" data-toggle="tab"><span class="glyphicon glyphicon-record"></span> Recorder</a>
+                    </li>
+                </ul>
 
-                        <video id="model" class="text-center col-md-12" poster="media/poster/poster.jpg" controls="controls" preload="none">
-                            <!-- MP4 for Safari, IE9, iPhone, iPad, Android, and Windows Phone 7 -->
-                            <source type="video/mp4" src="media/video/MattCutts_2011U.mp4" />
-                            <!-- WebM/VP8 for Firefox4, Opera, and Chrome -->
-                            <source type="video/webm" src="media/video/MattCutts_2011U.webm" />
-                            <!-- Ogg/Vorbis for older Firefox and Opera versions -->
-                            <source type="video/ogg" src="myvideo.ogv" />
-
-                            <!-- Flash fallback for non-HTML5 browsers without JavaScript -->
-                            <object class="col-md-12" type="application/x-shockwave-flash" data="mediaelement/build/flashmediaelement.swf">
-                                <param name="movie" value="mediaelement/build/flashmediaelement.swf" />
-                                <param name="flashvars" value="controls=true&file=media/video/MattCutts_2011U.mp4" />
-                                <!-- Image as a last resort -->
-                                <img src="media/poster/poster.jpg" width="560" height="318" title="No video playback capabilities" />
-                            </object>
-                        </video>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-6">
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        <span class="glyphicon glyphicon-record"></span> Recorder
-                    </div>
-
-                    <div class="panel-body">
-                        <div class="row">
-                            <div class="col-md-12">
-                                <button id="record-start" class="btn btn-primary" role="button">
-                                    <span class="glyphicon glyphicon-record"></span> Start recording
-                                </button>
-
-                                <button id="record-stop" class="btn btn-default" role="button" disabled="true">
-                                    <span class="glyphicon glyphicon-stop"></span> Stop recording
-                                </button>       
+                <div class="tab-content">
+                    <div class="tab-pane panel panel-default active" id="tab-player" style="border-top-left-radius: 0;">
+                        <div class="panel-body">
+                            <div id="player" class="clearfix">
+                                <div class="row">
+                                    <img src="media/poster/poster.jpg" class="col-md-offset-3 col-md-6" />
+                                </div>
                             </div>
                             
                             <br/>
 
-                            <div id="recorder">
-                                <img src="media/poster/poster.jpg" class="col-md-12" />
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <button id="tracks-play" class="btn btn-primary btn-default" role="button" disabled="true">
+                                        <span class="glyphicon glyphicon-play"></span> Play
+                                    </button>
+                                    <button id="tracks-pause" class="btn btn-default" role="button" disabled="true">
+                                        <span class="glyphicon glyphicon-pause"></span> Pause
+                                    </button>
+                                    <button id="tracks-stop" class="btn btn-default" role="button" disabled="true">
+                                        <span class="glyphicon glyphicon-stop"></span> Stop
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane panel panel-default" id="tab-recorder" style="border-top-left-radius: 0;">
+                        <div class="panel-body">
+                            <div class="row">
+                                <div id="recorder" class="clearfix">
+                                    <img src="media/poster/poster.jpg" class="col-md-offset-3 col-md-6" />
+                                </div>
+
+                                <br/>
+                                
+                                <div class="col-md-12">
+                                    <button id="record-start" class="btn btn-primary" role="button">
+                                        <span class="glyphicon glyphicon-record"></span> Start recording
+                                    </button>
+
+                                    <button id="record-stop" class="btn btn-default" role="button" disabled="true">
+                                        <span class="glyphicon glyphicon-stop"></span> Stop recording
+                                    </button>       
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -83,48 +91,35 @@
         
         <div class="row">
             <div class="col-md-12">
-                <div class="panel panel-default">
-                    <div class="pull-right" style="margin-top: 5px; margin-right: 10px;">
-                        <div class="btn-group">
-                            <button id="tracks-play" class="btn btn-sm btn-default" role="button" disabled="true">
-                                <span class="glyphicon glyphicon-play"></span> Play
-                            </button>
-                            <button id="tracks-pause" class="btn btn-sm btn-default" role="button" disabled="true">
-                                <span class="glyphicon glyphicon-pause"></span> Pause
-                            </button>
-                            <button id="tracks-stop" class="btn btn-sm btn-default" role="button" disabled="true">
-                                <span class="glyphicon glyphicon-stop"></span> Stop
-                            </button>
-                        </div>
+                <div class="pull-right">
+                    <button id="tracks-delete" class="btn btn-sm btn-danger" role="button" disabled="true">
+                        <span class="glyphicon glyphicon-trash"></span> Delete recorded tracks
+                    </button>
+                </div>
 
-                        <button id="tracks-delete" class="btn btn-sm btn-danger" role="button" disabled="true">
-                            <span class="glyphicon glyphicon-trash"></span> Delete all tracks
-                        </button>
-                    </div>
+                <ul class="nav nav-tabs" style="border-bottom: none;">
+                    <li class="active"><a href="#">All tracks</a></li>
+                    <li><a href="#">Model tracks</a></li>
+                    <li><a href="#">My recorded tracks</a></li>
+                </ul>
 
-                    <div class="panel-heading">
-                        <span class="glyphicon glyphicon-list"></span> List of recorded tracks
-                    </div>
-                    
-                    <div class="panel-body">
-                        <em class="text-info"><span class="glyphicon glyphicon-info-sign"></span> Select all tracks you want to play</em>
-                    </div>
-
-                    <table id="tracks-list" class="table table-striped table-hover">
+                <div class="panel panel-default" style="border-top-left-radius: 0;">
+                    <table id="tracks-list" class="table table-striped">
                         <thead>
                             <tr>
-                                <th>
+                                <th class="text-center col-md-1">
                                     <input type="checkbox" name="tracks-select" id="tracks-select" />
                                 </th>
-                                <th>Track name</th>
-                                <th>Preview</th>
-                                <th></th>
-                                <th></th>
+                                <th class="col-md-1">Type</th>
+                                <th class="col-md-3">Track</th>
+                                <th class="col-md-5">Timeline</th>
+                                <th class="col-md-1">Duration</th>
+                                <th class="col-md-1"></th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr class="no-track">
-                                <td colspan="5" class="text-center"><em>You have no recorded track.</em></td>
+                                <td colspan="6" class="text-center"><em>You have no recorded track.</em></td>
                             </tr>
                         </tbody>
                     </table>
@@ -135,17 +130,12 @@
 
 	<script type="text/javascript">
         $(document).ready(function () {
-            // using jQuery
-            $('video, audio').mediaelementplayer({
-                pauseOtherPlayers: false
-            });
+            // Initialize Recorder
+            Recorder.initialize();
+
+            // Initialize Track manager
+            TrackManager.initialize();
         });
-
-        // Initialize Recorder
-        Recorder.initialize();
-
-        // Initialize Track manager
-        TrackManager.initialize();
 	</script>
 </body>
 </html>

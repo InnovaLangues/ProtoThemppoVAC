@@ -17,9 +17,12 @@ foreach (array('video', 'audio') as $type) {
 		else {
 			$fileInfo = pathinfo($path);
 			$track = array (
-	    		'type' => 'wav' == $fileInfo['extension'] ? 'audio' : 'video',
-	    		'name' => $fileInfo['filename'],
-	    		'url'  => $path,
+	    		'type'         => 'wav' == $fileInfo['extension'] ? 'audio' : 'video',
+	    		'name'         => $fileInfo['filename'],
+	    		'url'          => $path,
+	    		'recorded'     => true,
+	    		'deletable'    => true,
+                'downloadable' => true,
 	    	);
 
 			echo json_encode($track);

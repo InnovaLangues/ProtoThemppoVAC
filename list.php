@@ -13,9 +13,12 @@ if ($directory) {
             if (!empty($fileInfo) && !empty($fileInfo['extension']) && in_array($fileInfo['extension'], array ('wav', 'webm'))) {
             	// Audio or video file
             	$tracks[] = array (
-            		'type' => 'wav' == $fileInfo['extension'] ? 'audio' : 'video',
-            		'name' => $fileInfo['filename'],
-            		'url'  => $filename,
+            		'type'         => 'wav' == $fileInfo['extension'] ? 'audio' : 'video',
+            		'name'         => $fileInfo['filename'],
+            		'url'          => $filename,
+                    'recorded'     => true,
+                    'deletable'    => true,
+                    'downloadable' => true,
             	);
             }
         }
