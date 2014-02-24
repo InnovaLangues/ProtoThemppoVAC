@@ -1,19 +1,48 @@
 var TrackManager = {
+	/**
+	 * Player buttons : Play button
+	 */
 	buttonPlay: null,
+	
+	/**
+	 * Player buttons : Pause button
+	 */
 	buttonPause: null,
+
+	/**
+	 * Player buttons : Stop button
+	 */
 	buttonStop: null,
+
+	/**
+	 * Delete all tracks button
+	 */
 	buttonDelete: null,
 
+	/**
+	 * Where new tracks must be appended
+	 */
 	container: null,
 
+	/**
+	 * List of all recorded tracks
+	 */
 	tracks: [],
 
-	playing: {},
+	/**
+	 * Player is paused ?
+	 */
+	paused: false,
 
+	/**
+	 * List of tracks which are currently playing
+	 */
+	playing: [],
+
+	/**
+	 * Initialize the track manager (register events)
+	 */
 	initialize: function () {
-		// Load tracks
-		this.loadTracks();
-
 		// Store buttons
 		this.buttonPlay   = $('#tracks-play');
 		this.buttonPause  = $('#tracks-pause');
@@ -21,6 +50,9 @@ var TrackManager = {
 		this.buttonDelete = $('#tracks-delete');
 
 		this.container = $('#tracks-list tbody');
+
+		// Load tracks
+		this.loadTracks();
 
 		// Play selected tracks
 		$('body').on('click', '#tracks-play', this, function (el) {
@@ -59,29 +91,29 @@ var TrackManager = {
 
 		$('body').on('change', '.track-select', this, function (el) {
 			var checked = $('.track-select:checked').length;
+			var $selectAll = $('#tracks-select');
 			if ($(this).is(':checked')) {
-				el.data.buttonPlay.prop('disabled', false);
-
 				if (checked === el.data.tracks.length) {
-					$('#tracks-select').prop('checked', true);
-					$('#tracks-select').prop('indeterminate', false);
+					$selectAll.prop('checked', true);
+					$selectAll.prop('indeterminate', false);
 				}
 				else {
-					$('#tracks-select').prop('checked', false);
-					$('#tracks-select').prop('indeterminate', true);
+					$selectAll.prop('checked', false);
+					$selectAll.prop('indeterminate', true);
 				}
 			}
 			else {
 				if (0 === checked) {
-					el.data.buttonPlay.prop('disabled', true);
-					$('#tracks-select').prop('checked', false);
-					$('#tracks-select').prop('indeterminate', false);
+					$selectAll.prop('checked', false);
+					$selectAll.prop('indeterminate', false);
 				}
 				else {
-					$('#tracks-select').prop('checked', false);
-					$('#tracks-select').prop('indeterminate', true);
+					$selectAll.prop('checked', false);
+					$selectAll.prop('indeterminate', true);
 				}
 			}
+
+			el.data.togglePlayButton();
 		});
 
 		// Delete a track
@@ -94,9 +126,6 @@ var TrackManager = {
 	},
 
 	addTrack: function (track) {
-		// Enable button if needed
-		this.buttonDelete.prop('disabled', false);
-
 		// Add track to list
 		this.tracks.push(track);
 
@@ -107,72 +136,107 @@ var TrackManager = {
 		var html = '';
 		html += '<tr id="' + track.name + '">';
 
-        html += '    <td><input type="checkbox" class="track-select" name="select-' + track.name + '" id="select-' + track.name + '" value="1" /></td>';
+        html += '    <td class="text-center"><input type="checkbox" class="track-select" name="select-' + track.name + '" id="select-' + track.name + '" value="1" /></td>';
         
         // Track name
 		html += '    <td>';
-        if ('audio' === track.type) {
-        	html += '	<span class="glyphicon glyphicon-music"></span> ';
+        
+		if ('audio' === track.type) {
+        	html += '	<span class="h2 glyphicon glyphicon-music"></span> ';
         }
         else if ('video' === track.type) {
-        	html += '	<span class="glyphicon glyphicon-film"></span> ';
+        	html += '	<span class="h2 glyphicon glyphicon-film"></span> ';
         }
-        html +=          track.name;
         html += '    </td>';
 
-        // Media player
-        html += '    <td>';
-        if ('audio' == track.type) {
-        	html += '	<audio id="player-' + track.name + '" controls="true">';
-        	html += '		<source type="audio/wav" src="' + track.url + '" />';
-        	html += '	</audio>';
-        }
-        else {
-        	html += '	<video id="player-' + track.name + '" class="" poster="media/poster/poster.jpg" controls="controls" preload="none">';
-            html += '   	<source type="video/webm" src="' + track.url + '" />';
-            html += '	</video>';
-        }
-        html += '    </td>';
+        html += '    <td>' + track.name + '</td>';
 
         html += '	 <td id="waveform-' + track.name + '"></td>';
-        html += '    <td class="text-right">';
 
+        html += '	 <td id="duration-' + track.name + '"></td>';
+
+        html += '    <td>';
         // Download button
         var file = track.name + ('audio' === track.type ? '.wav' : '.webm');
         html += '        <a href="download.php?file=' + file + '" target="_blank" class="track-download btn btn-sm btn-default" role="button">';
-        html += '            <span class="glyphicon glyphicon-download-alt"></span> Download track';
+        html += '            <span class="glyphicon glyphicon-download-alt"></span>';
+        html += '			 <span class="sr-only">Download</span>';
         html += '        </a>';
 
         // Delete button
-        html += '        <button class="track-delete btn btn-sm btn-danger" role="button">';
-        html += '            <span class="glyphicon glyphicon-trash"></span> Delete track';
-        html += '        </button>';
-
-        html += '    </td>';
-        html += '</tr>';
+	    html += '        <button class="track-delete btn btn-sm btn-danger" role="button">';
+	    html += '            <span class="glyphicon glyphicon-trash"></span>';
+	    html += '			 <span class="sr-only">Delete</span>';
+	    html += '        </button>';
+		html += '    </td>';        
 
 		this.container.append(html);
 
-		// var waveform = new Waveform({
-		// 	container: document.getElementById('waveform-' + track.name),
-		// 	innerColor: '#333',
-		// 	data: [0.5, 1.0, 0.5, 1.0]
-		// });
-		// Draw waveform
-		/*SC.get(track.url, function (track) {
-			
+		if ('audio' === track.type) {
+			// Create waveform for each audio track
+			var manager = this;
+			var waveform = Object.create(WaveSurfer);
 
-			waveform.dataFromSoundCloudTrack(track);
-			var streamOptions = waveform.optionsForSyncedStream();
-			SC.stream(track.uri, streamOptions, function(stream) {
-				window.exampleStream = stream;
+			// Add waveform
+			waveform.init({
+				height: 64,
+			    container: '#waveform-' + track.name,
+			    waveColor: '#777777',
+			    progressColor: '#3276b1',
+			    minPxPerSec: 40,
+			    fillParent: false
 			});
-		});*/
+
+			waveform.load(track.url);
+
+			track.waveformReady = false;
+			waveform.on('ready', function () {
+				track.waveformReady = true;
+				manager.togglePlayButton();
+				
+				var duration = waveform.backend.getDuration();
+
+				var hours = Math.floor(duration / 3600);
+				if (0 != hours) {
+					duration = duration % 3600;
+				}
+
+				var minutes = Math.floor(duration / 60);
+				if (0 != minutes) {
+					duration = duration % 60;
+				}
+
+				var seconds = Math.round(duration);
+
+				if (hours < 10) {
+					hours = '0' + hours;
+				}
+				if (minutes < 10) {
+					minutes = '0' + minutes;
+				}
+				if (seconds < 10) {
+					seconds = '0' + seconds;
+				}
+
+				var durationStr = '';
+				if ('00' != hours) {
+					durationStr += hours + ':';
+				}
+				durationStr += minutes + ':' + seconds;
+
+				$('#duration-' + track.name).append(durationStr);
+			});
+
+			track.waveform = waveform;
+		}
+
+		this.toggleDeleteButton();
 	},
 
+	/**
+	 * Delete a track from server
+	 */
 	deleteTrack: function (fileName) {
-		if (!fileName) return;
-
 		var track = this.getTrack(fileName);
 		if (typeof track !== 'undefined' && null != track && track.length !== 0) {
 			var manager = this;
@@ -198,11 +262,10 @@ var TrackManager = {
 	                    html += '</tr>';
 
 	                    manager.container.append(html);
-
-	                    // Change buttons state if needed
-						manager.buttonPlay.prop('disabled', true);
-						manager.buttonDelete.prop('disabled', true);
 					}
+
+					manager.togglePlayButton();
+					manager.toggleDeleteButton();
 	            }
 	        };
 
@@ -211,28 +274,38 @@ var TrackManager = {
 	    }
 	},
 
+	/**
+	 * Unselect all tracks
+	 */
 	selectAllTracks: function () {
 		$('.track-select').prop('checked', true);
-
-		this.buttonPlay.prop('disabled', false);
+		this.togglePlayButton();
 	},
 
+	/**
+	 * Select all tracks
+	 */
 	unselectAllTracks: function () {
 		$('.track-select').prop('checked', false);
-
-		this.buttonPlay.prop('disabled', true);
+		this.togglePlayButton();
 	},
 
+	/**
+	 * Delete all recorded tracks
+	 */
 	deleteAllTracks: function () {
-		this.buttonPlay.prop('disabled', true);
-		this.buttonDelete.prop('disabled', true);
-
 		for (var i = 0; i < this.tracks.length; i++) {
 			var track = this.tracks[i];
 			this.deleteTrack(track.name);
 		}
+
+		this.togglePlayButton();
+		this.toggleDeleteButton();
 	},
 
+	/**
+	 * Load existing tracks from server
+	 */
 	loadTracks: function () {
 		var manager = this;
 
@@ -255,11 +328,13 @@ var TrackManager = {
         request.send(formData);
 	},
 
+	/**
+	 * Start playing selected tracks
+	 */
 	play: function () {
-		// Manage buttons state
-		this.buttonPlay.prop('disabled', true);
-		this.buttonPause.prop('disabled', false);
-		this.buttonStop.prop('disabled', false);
+		this.paused = false;
+
+		var manager = this;
 
 		// Start playing selected tracks
 		var toPlay = $('.track-select:checked');
@@ -268,24 +343,145 @@ var TrackManager = {
 			var id = $(this).prop('id');
 			var name = id.substr(7, id.length);
 
-			// Retrieve and start corresponding player
-			var player = $('#player-' + name).get(0);
-			player.play();
-		})
+			var track = manager.getTrack(name);
+			if ('audio' === track.type) {
+				// Play audio from waveform JS
+				track.waveform.play();
+			}
+			else {
+				// Play video
+			}
+
+			manager.playing.push(track);
+		});
+
+		// Manage buttons state
+		this.togglePlayButton();
+		this.togglePauseButton();
+		this.toggleStopButton();
 	},
 
+	/**
+	 * Pause selected tracks which are currently playing
+	 */
 	pause: function () {
+		this.paused = true;
+
+		for (var i = 0; i < this.playing.length; i++) {
+			var track = this.playing[i];
+			if ('audio' === track.type) {
+				// Audio track
+				track.waveform.pause();
+			}
+			else {
+				// Video track
+			}
+		}
+
 		// Manage buttons state
-		this.buttonPause.prop('disabled', true);
-		this.buttonPlay.prop('disabled', false);
-		this.buttonStop.prop('disabled', false);	
+		this.togglePlayButton();
+		this.togglePauseButton();
+		this.toggleStopButton();
 	},
 
+	/**
+	 * Stop selected tracks which are currently playing
+	 */
 	stop: function () {
+		this.paused = false;
+
+		for (var i = 0; i < this.playing.length; i++) {
+			var track = this.playing[i];
+			if ('audio' === track.type) {
+				// Audio track
+				track.waveform.stop();
+			}
+			else {
+				// Video track
+			}
+		}
+
+		// Remove list of currently playing
+		this.playing = [];
+
 		// Manage buttons state
-		this.buttonStop.prop('disabled', true);
-		this.buttonPause.prop('disabled', true);
-		this.buttonPlay.prop('disabled', false);
+		this.togglePlayButton();
+		this.togglePauseButton();
+		this.toggleStopButton();
+	},
+
+	/**
+	 * Check if play button needs to be enabled and enable/disable it
+	 */
+	togglePlayButton: function () {
+		var enabled = false;
+
+		if ( (this.playing.length === 0 || this.paused) && this.tracks.length !== 0) {
+			// There are tracks
+			var selectedTracks = $('.track-select:checked');
+			if (selectedTracks.length !== 0) {
+				// There are selected tracks
+				var manager = this;
+
+				// Check if selected tracks are ready
+				var waveformReady = true;
+				selectedTracks.each(function (index) {
+					// Get track name from ID
+					var id = $(this).prop('id');
+					var name = id.substr(7, id.length);
+					
+					var track = manager.getTrack(name);
+					if ('audio' === track.type && !track.waveformReady) {
+						// There is a non ready track => can't enable play button
+						waveformReady = false;
+						return false; // Break the loop
+					}
+				});
+
+				if (waveformReady) {
+					// All waveform are loaded => we can enable play button
+					enabled = true;
+				}
+			}
+		}
+
+		this.buttonPlay.prop('disabled', !enabled);
+	},
+	
+	/**
+	 * Check if pause button needs to be enabled and enable/disable it
+	 */
+	togglePauseButton: function () {
+		var enabled = false;
+		if (this.tracks.length !== 0 && this.playing.length !== 0 && !this.paused) {
+			enabled = true;
+		}
+
+		this.buttonPause.prop('disabled', !enabled);
+	},
+	
+	/**
+	 * Check if stop button needs to be enabled and enable/disable it
+	 */
+	toggleStopButton: function () {
+		var enabled = false;
+		if (this.tracks.length !== 0 && this.playing.length !== 0) {
+			enabled = true;
+		}
+
+		this.buttonStop.prop('disabled', !enabled);
+	},
+
+	/**
+	 * Check if delete all button needs to be enabled and enable/disable it
+	 */
+	toggleDeleteButton: function () {
+		var enabled = false;
+		if (this.tracks.length !== 0) {
+			enabled = true;
+		}
+
+		this.buttonDelete.prop('disabled', !enabled);
 	},
 
 	/**
@@ -321,6 +517,9 @@ var TrackManager = {
         request.send(formData);
 	},
 
+	/**
+	 * Retrieve the track object in tracks list from its name
+	 */
 	getTrack: function (fileName) {
 		var track = null;
 
@@ -332,6 +531,9 @@ var TrackManager = {
 		return track;
 	},
 
+	/**
+	 * Retrieve the track index in tracks list from its name
+	 */
 	getTrackIndex: function (fileName) {
 		var index = null;
 		for (var i = 0; i < this.tracks.length; i++) {

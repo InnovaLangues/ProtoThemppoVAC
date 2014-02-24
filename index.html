@@ -14,6 +14,8 @@
     <script src="https://www.webrtc-experiment.com/RTCMultiConnection-v1.6.min.js"> </script>
 	<script src="https://www.webrtc-experiment.com/RecordRTC.js"></script>
 
+    <script src="wavesurfer/build/wavesurfer.min.js"></script>
+
     <script type="text/javascript" src="js/Recorder.js"></script>
     <script type="text/javascript" src="js/TrackManager.js"></script>
 </head>
@@ -113,13 +115,14 @@
                     <table id="tracks-list" class="table table-striped table-hover">
                         <thead>
                             <tr>
-                                <th>
+                                <th class="text-center col-md-1">
                                     <input type="checkbox" name="tracks-select" id="tracks-select" />
                                 </th>
-                                <th>Track name</th>
-                                <th>Preview</th>
-                                <th></th>
-                                <th></th>
+                                <th class="col-md-1">Type</th>
+                                <th class="col-md-3">Track</th>
+                                <th class="col-md-5">Timeline</th>
+                                <th class="col-md-1">Duration</th>
+                                <th class="col-md-1"></th>
                             </tr>
                         </thead>
                         <tbody>
