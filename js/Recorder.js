@@ -128,6 +128,6 @@ var Recorder = {
 
 	stopPreview: function () {
 		this.preview.pause();
-		$('#recorder').empty().append('<img src="media/poster/poster.jpg" class="col-md-offset-3 col-md-6" />');
+		$('#recorder').empty().append('<div class="row"><img src="media/poster/poster.jpg" class="col-md-offset-3 col-md-6" /></div>');
 	}
 };

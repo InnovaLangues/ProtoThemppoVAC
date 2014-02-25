@@ -476,7 +476,7 @@ var TrackManager = {
 			}
 		}
 
-		$('#player').empty().append('<img src="media/poster/poster.jpg" class="col-md-offset-3 col-md-6" />');
+		$('#player').empty().append('<div class="row"><img src="media/poster/poster.jpg" class="col-md-offset-3 col-md-6" /></div>');
 
 		// Remove list of currently playing
 		this.playing = [];
