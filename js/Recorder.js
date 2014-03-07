@@ -1,133 +1,133 @@
 var Recorder = {
-	/**
-	 * Start recording HTML button
-	 */
-	buttonStart: null,
-	
-	/**
-	 * Stop recording HTML button
-	 */
-	buttonStop:  null,
+    /**
+     * Start recording HTML button
+     */
+    buttonStart: null,
+    /**
+     * Stop recording HTML button
+     */
+    buttonStop: null,
+    preview: null,
+    connection: null,
+    currentStream: null,
+    /**
+     * Initialize the recorder
+     */
+    initialize: function() {
+        this.buttonStart = $('#record-start');
+        this.buttonStop = $('#record-stop');
 
-	preview: null,
+        var recorder = this;
 
-	connection: null,
+        // Init recorder
+        this.connection = new RTCMultiConnection();
+        this.connection.connect();
+        this.connection.onstream = function(e) {
+            e.type === 'local';
+            recorder.currentStream = e.streamid;
+            recorder.preview = e.mediaElement;
 
-	currentStream: null,
+            recorder.startPreview();
 
-	/**
-	 * Initialize the recorder
-	 */
-	initialize: function () {
-		this.buttonStart = $('#record-start');
-		this.buttonStop  = $('#record-stop');
+            recorder.connection.streams[recorder.currentStream].startRecording({
+                audio: true,
+                video: true
+            });
+        };
 
-		var recorder = this;
+        // Start recording
+        $('body').on('click', '#record-start', this, function(el) {
+            el.data.start();
+            return false;
+        });
 
-		// Init recorder
-		this.connection = new RTCMultiConnection();
-		this.connection.connect();
-		this.connection.onstream = function (e) {
-			e.type == 'local';
-			recorder.currentStream = e.streamid;
-			recorder.preview = e.mediaElement;
+        // Stop recording
+        $('body').on('click', '#record-stop', this, function(el) {
+            el.data.stop();
+            return false;
+        });
+    },
+    /**
+     * Start recording
+     */
+    start: function() {
+        var recorder = this;
 
-			recorder.startPreview();
+        this.connection.sessionid = (Math.random() * 999999999999).toString().replace('.', '');
+        this.connection.open();
 
-			recorder.connection.streams[recorder.currentStream].startRecording({
-		        audio: true,
-		        video: true
-		    });
-		};
+        // Disable record button
+        this.buttonStart.prop('disabled', true);
+        this.buttonStop.prop('disabled', false);
+    },
+    /**
+     * Stop recording
+     */
+    stop: function() {
+        // Disable start button
+        this.buttonStart.prop('disabled', false);
+        this.buttonStop.prop('disabled', true);
 
-		// Start recording
-		$('body').on('click', '#record-start', this, function (el) {
-			el.data.start();
-			return false;
-		});
+        if (typeof this.connection.streams !== 'undefined' && this.connection.streams !== null && this.connection.streams.length !== 0
+                && typeof this.connection.streams[this.currentStream] !== 'undefined' && this.connection.streams[this.currentStream] !== null
+                && this.connection.streams[this.currentStream].length !== 0)
+        {
 
-		// Stop recording
-		$('body').on('click', '#record-stop', this, function (el) {
-			el.data.stop();
-			return false;
-		});
-	},
+            var recorder = this;
+            this.connection.streams[this.currentStream].stopRecording(function(audioBlob, videoBlob) {
+                // Generate unique name
+                var date = new Date();
 
-	/**
-	 * Start recording
-	 */
-	start: function () {
-		var recorder = this;
+                var month = date.getMonth();
+                if (month < 10)
+                    month = '0' + month.toString();
 
-		this.connection.sessionid = (Math.random() * 999999999999).toString().replace('.', '');
-		this.connection.open();
+                var day = date.getDay();
+                if (day < 10)
+                    day = '0' + day.toString();
 
-		// Disable record button
-		this.buttonStart.prop('disabled', true);
-		this.buttonStop.prop('disabled', false);
-	},
+                var hours = date.getHours();
+                if (hours < 10)
+                    hours = '0' + hours;
 
-	/**
-	 * Stop recording
-	 */
-	stop: function () {
-		// Disable start button
-		this.buttonStart.prop('disabled', false);
-        this.buttonStop.prop('disabled', true);	
+                var minutes = date.getMinutes();
+                if (minutes < 10)
+                    minutes = '0' + minutes;
 
-        if (typeof this.connection.streams != 'undefined' && this.connection.streams != null && this.connection.streams.length != 0
-        	&& typeof this.connection.streams[this.currentStream] != 'undefined' && this.connection.streams[this.currentStream] != null && this.connection.streams[this.currentStream].length != 0) {
-	        
-			var recorder = this;
-	        this.connection.streams[this.currentStream].stopRecording(function(audioBlob, videoBlob) {
-		        // Generate unique name
-		        var date = new Date();
+                var seconds = date.getSeconds();
+                if (seconds < 10)
+                    seconds = '0' + seconds;
 
-				var month = date.getMonth();
-				if (month < 10)
-					month = '0' + month.toString();
+                var fileName = date.getFullYear() + '-' + month + '-' + day + '_' + hours + 'h' + minutes + 'm' + seconds;
 
-				var day = date.getDay();
-				if (day < 10)
-					day = '0' + day.toString();
+                // Stop video recorder
+                TrackManager.save('video', 'video_' + fileName, videoBlob);
 
-				var hours = date.getHours();
-				if (hours < 10)
-					hours = '0' + hours;
+                // Stop audio recorder
+                TrackManager.save('audio', 'audio_' + fileName, audioBlob);
 
-				var minutes = date.getMinutes();
-				if (minutes < 10)
-					minutes = '0' + minutes;
+                recorder.stopPreview();
+                recorder.connection.close();
+                recorder.initialize();
+            });
+        }
+    },
+    startPreview: function() {
+        this.preview.className = 'col-md-offset-3 col-md-6';
+        this.preview.volume = 1;
+        this.preview.muted = false;
+        this.preview.controls = false;
 
-				var seconds = date.getSeconds();
-				if (seconds < 10)
-					seconds = '0' + seconds;
-
-				var fileName = date.getFullYear() + '-' + month + '-' + day + '_' + hours + 'h' + minutes + 'm' + seconds;
-
-		        // Stop video recorder
-		        TrackManager.save('video', 'video_' + fileName, videoBlob);
-
-		        // Stop audio recorder
-		        TrackManager.save('audio', 'audio_' + fileName, audioBlob);
-
-		        recorder.stopPreview();
-		        recorder.connection.close();
-	        });
-    	}
-	},
-
-	startPreview: function () {
-		this.preview.className = 'col-md-offset-3 col-md-6';
-		this.preview.volume = 1;
-		this.preview.muted = false;
-		this.preview.controls = false;
-
-		$('#recorder').empty().append(this.preview);
-	},
-
-	stopPreview: function () {
-		this.preview.pause();
-		$('#recorder').empty().append('<div class="row"><img src="media/poster/poster.jpg" class="col-md-offset-3 col-md-6" /></div>');
-	}
+        $('#recorder').empty().append(this.preview);
+    },
+    stopPreview: function() {
+        this.preview.pause();
+        $('#recorder').empty().append('<div class="row"><img src="media/poster/poster.jpg" class="col-md-offset-3 col-md-6" /></div>');
+    }
 };
+
+function drawWave(buffers) {
+
+    var canvas = document.getElementById("wavedisplay");
+    drawBuffer(canvas.width, canvas.height, canvas.getContext('2d'), buffers[0]);
+}
