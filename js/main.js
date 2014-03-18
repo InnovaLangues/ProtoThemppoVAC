@@ -613,7 +613,6 @@ function initPlayer1() {
             mediaElement.addEventListener('ended', function(e) {
                 player1Ended = true;
                 TrackManager.deletePlaying('video-1');
-                console.log('1 ended');
                 TrackManager.togglePlayerButtons();
             }, false);
         },
@@ -636,7 +635,6 @@ function initPlayer2() {
             mediaElement.addEventListener('ended', function(e) {
                 player2Ended = true;
                 TrackManager.deletePlaying('video-2');
-                console.log('2 ended');
                 TrackManager.togglePlayerButtons();
             }, false);
         },
