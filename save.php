@@ -1,27 +1,33 @@
 <?php
 
-ini_set('display_errors', 'on');
-ini_set('upload_max_filesize', '1G');
+foreach (array('video', 'audio', 'av') as $type) {
 
-// Muaz Khan     - https://github.com/muaz-khan 
-// MIT License   - https://www.webrtc-experiment.com/licence/
-// Documentation - https://github.com/muaz-khan/WebRTC-Experiment/tree/master/RecordRTC
-foreach (array('video', 'audio') as $type) {
-    if (isset($_FILES[$type . '-blob'])) {
-        $filename = trim($_POST[$type . '-filename']);
-        $path = trim('uploads/' . $filename);
-        if (!move_uploaded_file($_FILES[$type . '-blob']['tmp_name'], $path)) {
-            // echo 'error : ' . $_FILES[$type . '-blob']['error'] ;
-            echo 'error';
+    if (isset($_FILES["${type}-blob"])) {
+
+        $fileName = trim($_POST["${type}-filename"]);
+        
+        $owner = trim($_POST["${type}-owner"]);
+        
+        $uploadDirectory = $owner == "student" ? "s_uploads/" . $fileName : "t_uploads/" . $fileName;
+        if (!move_uploaded_file($_FILES["${type}-blob"]["tmp_name"], $uploadDirectory)) {
+            echo("problem moving uploaded file");
         } else {
-            $fileInfo = pathinfo($path);
+            $fileInfo = pathinfo($uploadDirectory);
+
+            $extension = $fileInfo['extension'];
+            $type = 'video';
+            if (($extension == 'wav') || ($extension == 'mp3')) {
+                $type = 'audio';
+            }
             $track = array(
-                'type' => 'wav' == $fileInfo['extension'] ? 'audio' : 'video',
+                'type' => $type,
                 'name' => $fileInfo['filename'],
-                'url' => $path,
+                'url' => $uploadDirectory,
                 'recorded' => true,
                 'deletable' => true,
                 'downloadable' => true,
+                'extension' => $extension,
+                'owner' => $owner
             );
 
             echo json_encode($track);

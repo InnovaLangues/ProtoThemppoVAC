@@ -1,6 +1,6 @@
 <?php
 
-$uploadDir = 'uploads/';
+$uploadDir = 's_uploads/';
 
 if (!empty($_REQUEST['file'])) {
     $path = $uploadDir . $_REQUEST['file'];

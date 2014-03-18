@@ -16,11 +16,15 @@ var TrackManager = {
      */
     buttonDelete: null,
     /**
-     * Where new tracks must be appended
+     * Where new tracks must be appended (student)
      */
-    container: null,
+    s_container: null,
     /**
-     * List of all recorded tracks
+     * Where new tracks must be appended (models / teacher)
+     */
+    t_container: null,
+    /**
+     * List of all tracks
      */
     tracks: [],
     /**
@@ -41,7 +45,11 @@ var TrackManager = {
         this.buttonStop = $('#tracks-stop');
         this.buttonDelete = $('#tracks-delete');
 
-        this.container = $('#tracks-list tbody');
+        // student tracks container
+        this.s_container = $('#stracks-container tbody');
+
+        // model tracks container
+        this.t_container = $('#ttracks-container tbody');
 
         // Load tracks
         this.loadTracks();
@@ -118,124 +126,74 @@ var TrackManager = {
         });
     },
     addTrack: function(track) {
-        // Add track to list
+        // Add track to list (student + models / audio + video / audio / video)
         this.tracks.push(track);
 
-        // Remove no track line if needed
-        this.container.find('.no-track').remove();
+        // Only video ar shown in list (corresponding audio files (if exists) are autoamtically retrieved)
+        if ('video' === track.type || 'av' === track.type) {
 
-        // Display new track
-        var html = '';
-        html += '<tr id="' + track.name + '">';
+            // Remove no track line if needed
+            if (track.owner === 'student') {
+                this.s_container.find('.no-track').remove();
+            }
+            else if (track.owner === 'teacher')
+                this.t_container.find('.no-track').remove();
 
-        html += '    <td class="text-center"><input type="checkbox" class="track-select" name="select-' + track.name + '" id="select-' + track.name + '" value="1" /></td>';
+            // Display new track
+            var html = '';
+            html += '<tr id="' + track.name + '">';
 
-        // Track name
-        html += '    <td>';
+            html += '    <td class="text-center"><input type="checkbox" class="track-select" name="select-' + track.name + '" id="select-' + track.name + '" value="1"/></td>';
 
-        if ('audio' === track.type) {
-            html += '	<span class="h2 glyphicon glyphicon-music"></span> ';
-        }
-        else if ('video' === track.type) {
+            // Track name
+            html += '    <td>';
+
             html += '	<span class="h2 glyphicon glyphicon-film"></span> ';
+
+            html += '    </td>';
+
+            html += '    <td>' + track.name + '</td>';
+
+            html += '	 <td id="waveform-' + track.name + '"></td>';
+
+            html += '	 <td id="duration-' + track.name + '"></td>';
+
+            html += '    <td>';
+            if (track.downloadable) {
+                // Download button
+                var file = track.name + '.' + track.extension;//('audio' === track.type ? '.wav' : '.webm');
+                html += '	<a href="download.php?file=' + file + '" target="_blank" class="track-download btn btn-sm btn-default" role="button">';
+                html += '		<span class="glyphicon glyphicon-download-alt"></span>';
+                html += '		<span class="sr-only">Download</span>';
+                html += '	</a>';
+            }
+
+            if (track.deletable) {
+                // Delete button
+                html += '	<button class="track-delete btn btn-sm btn-danger" role="button">';
+                html += '		<span class="glyphicon glyphicon-trash"></span>';
+                html += '		<span class="sr-only">Delete</span>';
+                html += '	</button>';
+            }
+            html += '    </td>';
+
+            if (track.owner === 'student')
+                this.s_container.append(html);
+            else if (track.owner === 'teacher')
+                this.t_container.append(html);
+
+            this.toggleDeleteButton();
         }
-        html += '    </td>';
-
-        html += '    <td>' + track.name + '</td>';
-
-        html += '	 <td id="waveform-' + track.name + '"></td>';
-
-        html += '	 <td id="duration-' + track.name + '"></td>';
-
-        html += '    <td>';
-        if (track.downloadable) {
-            // Download button
-            var file = track.name + ('audio' === track.type ? '.wav' : '.webm');
-            html += '	<a href="download.php?file=' + file + '" target="_blank" class="track-download btn btn-sm btn-default" role="button">';
-            html += '		<span class="glyphicon glyphicon-download-alt"></span>';
-            html += '		<span class="sr-only">Download</span>';
-            html += '	</a>';
-        }
-
-        if (track.deletable) {
-            // Delete button
-            html += '	<button class="track-delete btn btn-sm btn-danger" role="button">';
-            html += '		<span class="glyphicon glyphicon-trash"></span>';
-            html += '		<span class="sr-only">Delete</span>';
-            html += '	</button>';
-        }
-        html += '    </td>';
-
-        this.container.append(html);
-
-        if ('audio' === track.type) {
-            // Create waveform for each audio track
-            var manager = this;
-            var waveform = Object.create(WaveSurfer);
-
-            // Add waveform
-            waveform.init({
-                height: 64,
-                container: '#waveform-' + track.name,
-                waveColor: '#777777',
-                progressColor: '#3276b1',
-                minPxPerSec: 40,
-                fillParent: false
-            });
-
-            waveform.load(track.url);
-
-            track.waveformReady = false;
-            waveform.on('ready', function() {
-                track.waveformReady = true;
-                manager.togglePlayButton();
-
-                var duration = waveform.backend.getDuration();
-
-                var hours = Math.floor(duration / 3600);
-                if (0 != hours) {
-                    duration = duration % 3600;
-                }
-
-                var minutes = Math.floor(duration / 60);
-                if (0 != minutes) {
-                    duration = duration % 60;
-                }
-
-                var seconds = Math.round(duration);
-
-                if (hours < 10) {
-                    hours = '0' + hours;
-                }
-                if (minutes < 10) {
-                    minutes = '0' + minutes;
-                }
-                if (seconds < 10) {
-                    seconds = '0' + seconds;
-                }
-
-                var durationStr = '';
-                if ('00' !== hours) {
-                    durationStr += hours + ':';
-                }
-                durationStr += minutes + ':' + seconds;
-
-                $('#duration-' + track.name).append(durationStr);
-            });
-
-            track.waveform = waveform;
-        }
-
-        this.toggleDeleteButton();
     },
     /**
      * Delete a track from server
      */
     deleteTrack: function(fileName) {
         var track = this.getTrack(fileName);
+ 
         if (typeof track !== 'undefined' && null !== track && track.length !== 0) {
             var manager = this;
-
+            
             // Delete file from server
             var formData = new FormData();
             formData.append('delete-file', track.url);
@@ -244,7 +202,7 @@ var TrackManager = {
             request.onreadystatechange = function() {
                 if (4 == request.readyState && 200 == request.status) {
                     // Remove track from list
-                    manager.container.find('#' + track.name).remove();
+                    manager.s_container.find('#' + track.name).remove();
 
                     var trackIndex = manager.getTrackIndex(fileName);
                     manager.tracks.splice(trackIndex, 1);
@@ -256,7 +214,7 @@ var TrackManager = {
                         html += '    <td colspan="6" class="text-center"><em>You have no recorded track.</em></td>';
                         html += '</tr>';
 
-                        manager.container.append(html);
+                        manager.s_container.append(html);
                     }
 
                     manager.togglePlayButton();
@@ -288,7 +246,8 @@ var TrackManager = {
     deleteAllTracks: function() {
         for (var i = 0; i < this.tracks.length; i++) {
             var track = this.tracks[i];
-            this.deleteTrack(track.name);
+            if ('student' === track.owner)
+                this.deleteTrack(track.name);
         }
 
         this.togglePlayButton();
@@ -323,119 +282,46 @@ var TrackManager = {
      */
     play: function() {
         this.paused = false;
-
         var manager = this;
-
-        var videos = [];
-
-        // Start playing selected tracks
-        var audios = [];
-        var videos = [];
-        $('.track-select:checked').each(function(index) {
-            var name = $(this).parents('tr').prop('id');
-
-            var track = manager.getTrack(name);
-            if ('audio' === track.type) {
-                audios.push(track);
-            }
-            else {
-                videos.push(track);
-            }
-        });
-
-        // Start videos
-        this.playVideo(videos);
-
-        // Start audio
-        this.playAudio(audios);
+        var player1Src = '';
+        var player2Src = '';
+        if (player1)
+            player1Src = $('#' + player1.media.id).attr('src');
+        if (player2)
+            player2Src = $('#' + player2.media.id).attr('src');
+        if (player1 && player1Src !== '') {
+            player1.play();
+            manager.playing.push('video-1');
+            if (sound1 !== null)
+                sound1.play();
+        }
+        if (player2 && player2Src !== '') {
+            player2.play();
+            manager.playing.push('video-2');
+            if (sound2 !== null)
+                sound2.play();
+        }
 
         // Manage buttons state
         this.togglePlayerButtons();
-    },
-    playAudio: function(audios) {
-        if (audios && audios.length !== 0) {
-            var manager = this;
-
-            for (var i = 0; i < audios.length; i++) {
-                var audio = audios[i];
-
-                // Play audio from waveform JS
-                audio.waveform.play();
-                audio.waveform.on('finish', function() {
-                    manager.deletePlaying(audio.name);
-                    manager.togglePlayerButtons();
-                    //console.log(audio.name + ' is ended');
-                });
-
-                this.playing.push(audio);
-            }
-        }
-    },
-    playVideo: function(videos) {
-        // Loop through videos to create mosaic
-        if (videos && videos.length !== 0) {
-            // Calculate size according to number of videos to play
-            var size = 4;
-            switch (videos.length) {
-                case 1:
-                    size = 12;
-                    break;
-                case 2:
-                    size = 6;
-                    break;
-                default:
-                    size = 4;
-                    break;
-            }
-
-            var manager = this;
-
-            var $player = $('#player');
-            $('#player').empty();
-            for (var i = 0; i < videos.length; i++) {
-                var video = videos[i];
-
-                // Create player HTML
-                var html = '';
-                html += '<video id="player-' + video.name + '" class="col-md-' + size + '" poster="media/poster/poster.jpg" style="padding: 2px;">';
-                html += '  	<source type="video/webm" src="' + video.url + '" />';
-                html += '</video>';
-
-                $player.append(html);
-
-                // Start player
-                video.player = $('#player-' + video.name).get(0);
-
-                //does not work without parameters -> video, domObject
-                video.player.addEventListener('ended', function(video, domObject) {
-                    var vName = this.id.substring('player-'.length);
-                    //console.log(vName + ' ended');
-                    manager.deletePlaying(vName);
-                    manager.togglePlayerButtons();
-                });
-
-                video.player.play();
-
-                this.playing.push(video);
-            }
-        }
-        
     },
     /**
      * Pause selected tracks which are currently playing
      */
     pause: function() {
         this.paused = true;
-
+       
         for (var i = 0; i < this.playing.length; i++) {
-            var track = this.playing[i];
-            if ('audio' === track.type) {
-                // Audio track
-                track.waveform.pause();
+            var player = this.playing[i];
+            if (player1 && 'video-1' === player) {
+                player1.pause();
+                if(sound1)
+                    sound1.pause();
             }
-            else {
-                // Video track
-                track.player.pause();
+            else if (player2 && 'video-2' === player) {
+                player2.pause();
+                if(sound2)
+                    sound2.pause();
             }
         }
 
@@ -449,19 +335,26 @@ var TrackManager = {
         this.paused = false;
 
         for (var i = 0; i < this.playing.length; i++) {
-            var track = this.playing[i];
-            if ('audio' === track.type) {
-                // Audio track
-                track.waveform.stop();
+            var player = this.playing[i];
+            if (player1 && 'video-1' === player) {
+                player1.pause();
+                player1.setCurrentTime(0);
+                if(sound1){
+                    sound1.pause();
+                    sound1.currentTime = 0;
+                }
             }
-            else {
-                // Video track
-                track.player.pause();
-                track.player.currentTime = 0; // Reset time
+            else if (player2 && 'video-2' === player) {
+                player2.pause();
+                player2.setCurrentTime(0);
+                if(sound2){
+                    sound2.pause();
+                    sound2.currentTime = 0;
+                }
             }
         }
 
-        $('#player').empty().append('<div class="row"><img src="media/poster/poster.jpg" class="col-md-offset-3 col-md-6" /></div>');
+        //$('#player').empty().append('<div class="row"><img src="media/poster/poster.jpg" class="col-md-offset-3 col-md-6" /></div>');
 
         // Remove list of currently playing
         this.playing = [];
@@ -470,7 +363,6 @@ var TrackManager = {
         this.togglePlayerButtons();
     },
     togglePlayerButtons: function() {
-        console.log('called');
         this.togglePlayButton();
         this.togglePauseButton();
         this.toggleStopButton();
@@ -480,33 +372,9 @@ var TrackManager = {
      */
     togglePlayButton: function() {
         var enabled = false;
+
         if ((this.playing.length === 0 || this.paused) && this.tracks.length !== 0) {
-            // There are tracks
-            var selectedTracks = $('.track-select:checked');
-            if (selectedTracks.length !== 0) {
-                // There are selected tracks
-                var manager = this;
-
-                // Check if selected tracks are ready
-                var waveformReady = true;
-                selectedTracks.each(function(index) {
-                    // Get track name from ID
-                    var id = $(this).prop('id');
-                    var name = id.substr(7, id.length);
-
-                    var track = manager.getTrack(name);
-                    if ('audio' === track.type && !track.waveformReady) {
-                        // There is a non ready track => can't enable play button
-                        waveformReady = false;
-                        return false; // Break the loop
-                    }
-                });
-
-                if (waveformReady) {
-                    // All waveform are loaded => we can enable play button
-                    enabled = true;
-                }
-            }
+            enabled = true;
         }
         this.buttonPlay.prop('disabled', !enabled);
     },
@@ -515,6 +383,7 @@ var TrackManager = {
      */
     togglePauseButton: function() {
         var enabled = false;
+        
         if (this.tracks.length !== 0 && this.playing.length !== 0 && !this.paused) {
             enabled = true;
         }
@@ -526,6 +395,7 @@ var TrackManager = {
      */
     toggleStopButton: function() {
         var enabled = false;
+        
         if (this.tracks.length !== 0 && this.playing.length !== 0) {
             enabled = true;
         }
@@ -556,6 +426,7 @@ var TrackManager = {
         formData.append(fileType + '-filename', file);
         formData.append(fileType + '-blob', blob);
 
+
         // Send file to server
         var request = new XMLHttpRequest();
         request.onreadystatechange = function() {
@@ -566,9 +437,22 @@ var TrackManager = {
                     manager.addTrack(track);
                 }
                 else {
-                    console.log('error');
+                    console.log('Track Manger Save Error');
                 }
             }
+        };
+
+        request.upload.onprogress = function(e) {
+            /*if (!progress)
+             return;
+             if (e.lengthComputable) {
+             progress.value = (e.loaded / e.total) * 100;
+             progress.textContent = progress.value; // Fallback for unsupported browsers.
+             }
+             
+             if (progress.value == 100) {
+             progress.value = 0;
+             }*/
         };
 
         request.open('POST', 'save.php');
@@ -605,7 +489,7 @@ var TrackManager = {
     deletePlaying: function(fileName) {
         for (var i = 0; i < this.playing.length; i++) {
             var currentTrack = this.playing[i];
-            if (fileName == currentTrack['name']) {
+            if (fileName == currentTrack) {
                 this.playing.splice(i, 1);
                 break;
             }
