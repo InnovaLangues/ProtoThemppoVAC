@@ -209,8 +209,6 @@ $(document).ready(function() {
         $(this).parents(".btn-group").find('#btn-title').text($(this).text());
     });
 
-
-
 });
 
 // handle start recording event
@@ -456,7 +454,6 @@ function PostBlob(blob, fileType, fileName) {
     var owner = isStudent ? 'student' : 'teacher';
     formData.append(fileType + '-owner', owner);
 
-
     // POST the Blob
     xhr('save.php', formData, null, function(fileURL) {
 
@@ -483,9 +480,6 @@ function xhr(url, data, progress, callback) {
             //callback(request.responseText);
             var track = JSON.parse(request.responseText);
             TrackManager.addTrack(track);
-            console.log('success');
-            console.log(track);
-
             if ('video' === track.type) {
                 var html = '';
                 html += '<video id="video-2" controls="controls"  width="480" height="270">';
@@ -518,19 +512,13 @@ function xhr(url, data, progress, callback) {
 }
 
 
-function drawWave(buffers) {
-    var canvas = document.getElementById("wavedisplay");
-    drawBuffer(canvas.width, canvas.height, canvas.getContext('2d'), buffers[0]);
-}
-
-
 function cancelAnalyserUpdates() {
     window.cancelAnimationFrame(rafID);
     rafID = null;
 }
 
 function updateAnalysers(time) {
-    //console.log(time);
+
     if (!analyserContext) {
         var canvas = document.getElementById("analyser");
         canvasWidth = canvas.width;
