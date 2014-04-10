@@ -329,6 +329,9 @@ function PostBlob(blob, fileType, fileName) {
 
     var owner = isStudent ? 'student' : 'teacher';
     formData.append(fileType + '-owner', owner);
+    
+    
+    TrackManager.togglePlayerButtons();
 
     // POST the Blob
     xhr('save.php', formData, null, function(fileURL) {
