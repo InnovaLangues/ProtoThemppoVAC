@@ -85,12 +85,15 @@ function exportMP3(type){
     var bufferR = mergeBuffers(recBuffersR, recLength);
 
     console.log("Start MP3 encoding");
-    var mp3codec = Lame.init();
+    var mp3codec = Lame.init();    
     Lame.set_mode(mp3codec, Lame.JOINT_STEREO);
     Lame.set_num_channels(mp3codec, 2);
     Lame.set_out_samplerate(mp3codec, sampleRate/2);
     Lame.set_bitrate(mp3codec, 128);
     Lame.init_params(mp3codec);
+    
+    
+
 
     var mp3data = Lame.encode_buffer_ieee_float(mp3codec, bufferL, bufferR);
     audioBlob = new Blob([mp3data.data], { type: "audio/mp3" });

@@ -7,16 +7,13 @@
         <!-- STYLES -->
         <link rel="stylesheet" href="libraries/bootstrap/css/bootstrap.min.css" />
         <link rel="stylesheet" href="libraries/mediaelement/build/mediaelementplayer.css" />
-        <!--<link rel="stylesheet" href="http://mediaelementjs.com/js/mejs-2.9.2/mediaelementplayer.min.css" />-->
         <link rel="stylesheet" href="css/styles.css" />
 
         <!-- JS LIBS -->
         <script type="text/javascript" src="libraries/jquery.min.js"></script>
         <script type="text/javascript" src="libraries/bootstrap.min.js"></script>
         <script src="libraries/mediaelement-and-player.min.js"></script>
-        <!--<script src="http://mediaelementjs.com/js/mejs-2.9.2/mediaelement-and-player.min.js"></script>-->
         <script src="libraries/RecordRTC.js"></script>
-        <!--<script src="http://www.rtcmulticonnection.org/latest.js"></script>-->
         <script src="libraries/wavesurfer.min.js"></script>
         <script type="text/javascript" src="libraries/recorder.js"></script>
         <script type="text/javascript" src="libraries/audiodisplay.js"></script>
@@ -55,7 +52,7 @@
                         </video>  -->
                         <img width="480" class="no-video-img" height="270" alt="no image" title="PLease select a video" src="media/poster/poster.jpg"/>
                     </div>
-                   
+
                     <br/>
                     <!-- VIDEO 2 CONTROLS -->
                     <div class="row">
@@ -86,9 +83,20 @@
                     <!-- VIDEO -->
                     <div class="row">
                         <div class="col-md-12">
-                            <button class="btn btn-default" role="button" data-id="video-1" data-toggle="modal" data-target="#file-dialog">
-                                <span class="glyphicon glyphicon-film"></span> Video
-                            </button>
+                            <div class="row text-center">
+                                <div class="col-md-4">
+                                    <button class="btn btn-default" role="button" data-id="video-1" title="choose a source for player 1" data-toggle="modal" data-target="#file-dialog">
+                                        <span class="glyphicon glyphicon-film"></span> video source
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <button class="btn btn-default" role="button" data-id="audio-1" title="choose a source for player 1" data-toggle="modal" data-target="#audio-file-dialog">
+                                        <span class="glyphicon glyphicon-music"></span> audio source
+                                    </button>
+                                </div>
+                            </div>
                             <!-- filename -->
                         </div>
                     </div>
@@ -119,141 +127,222 @@
                     <!-- VIDEO -->
                     <div class="row">
                         <div class="col-md-12">
-                            <button class="btn btn-default" role="button" data-id="video-2" data-toggle="modal" data-target="#file-dialog">
-                                <span class="glyphicon glyphicon-film"></span> Video
-                            </button>
-                            <!-- filename -->
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <button class="btn btn-default" role="button" data-id="video-2" title="choose a source for player 2" data-toggle="modal" data-target="#file-dialog">
+                                        <span class="glyphicon glyphicon-film"></span> video source
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <button class="btn btn-default" role="button" data-id="audio-2" title="choose a source for player 1" data-toggle="modal" data-target="#audio-file-dialog">
+                                        <span class="glyphicon glyphicon-music"></span> audio source
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <br/>
                 </div>
             </div>
-            <hr/>
 
-
-            <!-- MODAL FILE DIALOG -->
+            <!-- VIDEO MODAL FILE DIALOG -->
             <div class="modal fade" id="file-dialog" tabindex="-1" role="dialog" aria-hidden="true">
                 <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header">
                             <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                            <h4 class="modal-title" id="help-modal-label">CHOOSE A FILE</h4>
+                            <h4 class="modal-title" id="help-modal-label">CHOOSE A SOURCE</h4>
                         </div>
                         <div class="modal-body"> 
-                            <div class="col-md-12">
-                                <div class="btn-group">
-                                    <button type="button" id="btn-title" class="btn btn-default">I want to open a file from</button>
-                                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-                                        <span class="caret"></span>
-                                        <span class="sr-only"></span>
-                                    </button>
-                                    <ul class="dropdown-menu" role="menu">
-                                        <li><a  data-id="my-tracks" href="#my-tracks">My recorded tracks</a></li>
-                                        <li><a data-id="teacher-tracks" href="#teacher-tracks">Teacher models</a></li>
-                                        <li><a data-id="web-track" href="#web-track">From web</a></li>
-                                        <li><a data-id="local-track" href="#local-track">From my machine</a></li>
-                                    </ul>
-                                </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="row file-type-chooser">
+                                        <div class="col-md-6">
+                                            <div class="btn-group">
+                                                <button type="button" id="btn-title" class="btn btn-default">I want to open a file from</button>
+                                                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                                                    <span class="caret"></span>
+                                                    <span class="sr-only"></span>
+                                                </button>
+                                                <ul class="dropdown-menu" role="menu">  
+                                                    <li><a data-id="my-tracks" href="#my-tracks">My recorded tracks</a></li>
+                                                    <li><a data-id="teacher-tracks" href="#teacher-tracks">Teacher models</a></li>
+                                                    <li><a data-id="web-track" href="#web-track">From web</a></li>
+                                                    <li><a data-id="local-track" href="#local-track">From my machine</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h5 class="selected-title"></h5>
+                                        </div>
+                                    </div>
 
-                                <!-- <div class="input-group">
-                                     <div class="input-group-btn">
-                                         <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">I want to open a file from <span class="caret"></span></button>
-                                         <ul class="dropdown-menu" role="menu">
-                                             <li><a data-id="my-tracks" href="#my-tracks">My recorded tracks</a></li>
-                                             <li><a data-id="teacher-tracks" href="#teacher-tracks">Teacher models</a></li>
-                                             <li><a data-id="web-track" href="#web-track">From web</a></li>
-                                             <li><a data-id="local-track" href="#local-track">From my machine</a></li>
-                                         </ul>
-                                     </div>
-                                     <input type="text" class="form-control" placeholder="No file type selected">
-                                 </div>-->
-
-
-                                <!-- STUDENT TRACKS -->
-                                <div class="row modal-item" id="my-tracks" style="display: none;">
-                                    <div class="col-md-12">                        
-                                        <!-- STUDENT TRACKS -->
-                                        <div id="strack-list" class="tab-pane active" style="border-top-left-radius: 0;">
-                                            <table id="stracks-container" class="table table-striped">
-                                                <thead>
-                                                    <tr>
-                                                        <th class="text-center col-md-1">
-                                                            <input type="checkbox" name="tracks-select" id="stracks-select" />
-                                                        </th>
-                                                        <th class="col-md-1">Type</th>
-                                                        <th class="col-md-3">Track</th>
-                                                        <th class="col-md-5">Timeline</th>
-                                                        <th class="col-md-1">Duration</th>
-                                                        <th class="col-md-1"></th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <tr class="no-track">
-                                                        <td colspan="6" class="text-center"><em>You have no recorded track.</em></td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
+                                    <!-- STUDENT TRACKS -->
+                                    <div class="row modal-item" id="my-tracks" style="display: none;">
+                                        <div class="col-md-12">                                             
+                                            <!-- STUDENT TRACKS -->
+                                            <div id="strack-list" class="tab-pane active" style="border-top-left-radius: 0;">
+                                                <table id="stracks-container" class="table table-striped">
+                                                    <thead>
+                                                        <tr>
+                                                            <th class="text-center col-md-1"> </th>
+                                                            <th class="col-md-1">Type</th>
+                                                            <th class="col-md-3">Track</th>
+                                                            <th class="col-md-1"></th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr class="no-track">
+                                                            <td colspan="6" class="text-center"><em>You have no recorded track.</em></td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- TEACHER TRACKS -->
+                                    <div class="row modal-item" id="teacher-tracks" style="display: none;">
+                                        <div class="col-md-12">
+                                            <div id="ttrack-list" class="panel-default" style="border-top-left-radius: 0;">
+                                                <table id="ttracks-container" class="table table-striped">
+                                                    <thead>
+                                                        <tr>
+                                                            <th class="text-center col-md-1"></th>
+                                                            <th class="col-md-1">Type</th>
+                                                            <th class="col-md-3">Track</th>
+                                                            <th class="col-md-1"></th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr class="no-track">
+                                                            <td colspan="6" class="text-center"><em>You have no recorded track.</em></td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- WEB TRACK -->
+                                    <div class="row modal-item" id="web-track" style="display: none;">
+                                        <div class="col-md-12">
+                                            <div class="tab-pane" id="wtrack"> 
+                                                <h4>Choose a file from the web by entering an url in the text box</h4>
+                                                <input type="text" id="open-web-video" placeholder="Enter an url" />                                                
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- COMPUTER TRACK -->
+                                    <div class="row modal-item" id="local-track" style="display: none;">
+                                        <div class="col-md-12">
+                                            <div class="tab-pane" id="ltrack">
+                                                <h4>Choose a file from your machine</h4>
+                                                <input type="file" id="open-file" accept="video/*" name="file" /> 
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                                <!-- TEACHER TRACKS -->
-                                <div class="row modal-item" id="teacher-tracks" style="display: none;">
-                                    <div class="col-md-12">              
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
 
-                                        <div id="ttrack-list" class="panel-default" style="border-top-left-radius: 0;">
-                                            <table id="ttracks-container" class="table table-striped">
-                                                <thead>
-                                                    <tr>
-                                                        <th class="text-center col-md-1">
-                                                            <input type="checkbox" name="tracks-select" id="ttracks-select" />
-                                                        </th>
-                                                        <th class="col-md-1">Type</th>
-                                                        <th class="col-md-3">Track</th>
-                                                        <th class="col-md-5">Timeline</th>
-                                                        <th class="col-md-1">Duration</th>
-                                                        <th class="col-md-1"></th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <tr class="no-track">
-                                                        <td colspan="6" class="text-center"><em>You have no recorded track.</em></td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
+                </div>
+            </div>
+            
+            <div class="modal fade" id="audio-file-dialog" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                            <h4 class="modal-title" id="help-modal-label">CHOOSE AN AUDIO SOURCE</h4>
+                        </div>
+                        <div class="modal-body"> 
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="row file-type-chooser">
+                                        <div class="col-md-6">
+                                            <div class="btn-group">
+                                                <button type="button" id="btn-title" class="btn btn-default">I want to open a file from</button>
+                                                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                                                    <span class="caret"></span>
+                                                    <span class="sr-only"></span>
+                                                </button>
+                                                <ul class="dropdown-menu" role="menu">  
+                                                    <li><a data-id="my-tracks" href="#my-tracks">My recorded tracks</a></li>
+                                                    <li><a data-id="teacher-tracks" href="#teacher-tracks">Teacher models</a></li>
+                                                    <li><a data-id="local-track" href="#local-track">From my machine</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h5 class="selected-title"></h5>
                                         </div>
                                     </div>
-                                </div>
-                                <!-- WEB TRACK -->
-                                <div class="row modal-item" id="web-track" style="display: none;">
-                                    <div class="col-md-12">  
-                                        <div class="tab-pane" id="wtrack"> 
-                                            <table id="wtrack-container" class="table table-striped">
-                                                <tbody>
-                                                    <tr>
-                                                        <td>Choose a file from the web by entering an url in the text box</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td><input type="text" id="open-web-video" placeholder="Enter url here..." /> </td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
+
+                                    <!-- STUDENT TRACKS -->
+                                    <div class="row modal-item" id="my-tracks" style="display: none;">
+                                        <div class="col-md-12">                                             
+                                            <!-- STUDENT TRACKS -->
+                                            <div id="strack-audio-list" class="tab-pane active" style="border-top-left-radius: 0;">
+                                                <table class="audio-tracks-table table table-striped">
+                                                    <thead>
+                                                        <tr>
+                                                            <th class="text-center col-md-1"> </th>
+                                                            <th class="col-md-1">Type</th>
+                                                            <th class="col-md-3">Track</th>
+                                                            <th class="col-md-1"></th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr class="no-track">
+                                                            <td colspan="6" class="text-center"><em>You have no recorded track.</em></td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                <!-- COMPUTER TRACK -->
-                                <div class="row modal-item" id="local-track" style="display: none;">
-                                    <div class="col-md-12"> 
-                                        <div class="tab-pane" id="ltrack">
-                                            <table id="ltrack-container" class="table table-striped">
-                                                <tbody>
-                                                    <tr>
-                                                        <td>Choose a file from your machine</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td><input type="file" id="open-file" accept="video/*" name="file" /> </td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>                                            
+                                    <!-- TEACHER TRACKS -->
+                                    <div class="row modal-item" id="teacher-tracks" style="display: none;">
+                                        <div class="col-md-12">
+                                            <div id="ttrack-audio-list" class="panel-default" style="border-top-left-radius: 0;">
+                                                <table class="audio-tracks-table table table-striped">
+                                                    <thead>
+                                                        <tr>
+                                                            <th class="text-center col-md-1"></th>
+                                                            <th class="col-md-1">Type</th>
+                                                            <th class="col-md-3">Track</th>
+                                                            <th class="col-md-1"></th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr class="no-track">
+                                                            <td colspan="6" class="text-center"><em>You have no recorded track.</em></td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- WEB TRACK -->
+                                    <div class="row modal-item" id="web-track" style="display: none;">
+                                        <div class="col-md-12">
+                                            <div class="tab-pane" id="wtrack"> 
+                                                <h4>Choose a file from the web by entering an url in the text box</h4>
+                                                <input type="text" id="open-web-video" placeholder="Enter an url" />                                                
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- COMPUTER TRACK -->
+                                    <div class="row modal-item" id="local-track" style="display: none;">
+                                        <div class="col-md-12">
+                                            <div class="tab-pane" id="ltrack">
+                                                <h4>Choose a file from your machine</h4>
+                                                <input type="file" id="open-file" accept="audio/*" name="file" /> 
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -267,7 +356,7 @@
                 </div>
             </div>
         </div>
-	
+
 
         <script type="text/javascript" src="js/main.js">
 

@@ -129,7 +129,7 @@ var TrackManager = {
         // Add track to list (student + models / audio + video / audio / video)
         this.tracks.push(track);
 
-        // Only video ar shown in list (corresponding audio files (if exists) are autoamtically retrieved)
+        // Only video ar shown in list (corresponding audio files (if exists) are automatically retrieved)
         if ('video' === track.type || 'av' === track.type) {
 
             // Remove no track line if needed
@@ -142,22 +142,13 @@ var TrackManager = {
             // Display new track
             var html = '';
             html += '<tr id="' + track.name + '">';
-
-            html += '    <td class="text-center"><input type="checkbox" class="track-select" name="select-' + track.name + '" id="select-' + track.name + '" value="1"/></td>';
-
-            // Track name
+            html += '    <td class="text-center"><input type="radio" class="track-select" name="select" id="select-' + track.name + '" value="1"/></td>';
+            // icone
             html += '    <td>';
-
-            html += '	<span class="h2 glyphicon glyphicon-film"></span> ';
-
+            html += '       <span class="h2 glyphicon glyphicon-film"></span> ';
             html += '    </td>';
-
+            // name
             html += '    <td>' + track.name + '</td>';
-
-            html += '	 <td id="waveform-' + track.name + '"></td>';
-
-            html += '	 <td id="duration-' + track.name + '"></td>';
-
             html += '    <td>';
             if (track.downloadable) {
                 // Download button
@@ -181,7 +172,6 @@ var TrackManager = {
                 this.s_container.append(html);
             else if (track.owner === 'teacher')
                 this.t_container.append(html);
-
             this.toggleDeleteButton();
         }
     },
@@ -262,10 +252,10 @@ var TrackManager = {
         var formData = new FormData();
         var request = new XMLHttpRequest();
         request.onreadystatechange = function() {
-            if (4 == request.readyState && 200 == request.status) {
+            if (4 === request.readyState && 200 === request.status) {
                 var tracks = JSON.parse(request.responseText);
 
-                if (typeof tracks != 'undefined' && null != tracks && tracks.length !== 0) {
+                if (typeof tracks !== 'undefined' && null !== tracks && tracks.length !== 0) {
                     for (var i = 0; i < tracks.length; i++) {
                         var track = tracks[i];
                         manager.addTrack(track);
@@ -338,10 +328,10 @@ var TrackManager = {
             var player = this.playing[i];
             if (player1 && 'video-1' === player) {
                 player1.pause();
-                player1.setCurrentTime(0);
+                player1.setCurrentTime(0);                
                 if(sound1){
+                    //sound1.currentTime = 0;
                     sound1.pause();
-                    sound1.currentTime = 0;
                 }
             }
             else if (player2 && 'video-2' === player) {
@@ -349,13 +339,10 @@ var TrackManager = {
                 player2.setCurrentTime(0);
                 if(sound2){
                     sound2.pause();
-                    sound2.currentTime = 0;
+                    //sound2.currentTime = 0;
                 }
             }
         }
-
-        //$('#player').empty().append('<div class="row"><img src="media/poster/poster.jpg" class="col-md-offset-3 col-md-6" /></div>');
-
         // Remove list of currently playing
         this.playing = [];
 
