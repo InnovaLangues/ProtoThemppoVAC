@@ -209,9 +209,10 @@ record.onclick = function() {
 
         $("#video-2-container").children().remove();
         $("#video-2-container").append(html);
+        
         initPlayer2();
-
         player2.play();
+        player2.setMuted(true);
 
         // spectrum analyzer and Recorder instanciation (for mp3 export)
         gotStream(stream);
@@ -491,7 +492,7 @@ function initPlayer2() {
     player2 = new MediaElementPlayer('#video-2', {
         enableAutosize: false,
         pauseOtherPlayers: false,
-        features: ['playpause', 'progress', 'current', 'duration', 'tracks', 'volume', 'fullscreen'],
+        features: ['playpause', 'progress', 'current', 'duration', 'tracks'],
         success: function(mediaElement, domObject) {
             mediaElement.addEventListener('timeupdate', function(e) {
                 //document.getElementById('current-time').innerHTML = mediaElement.currentTime;
@@ -506,5 +507,5 @@ function initPlayer2() {
         error: function() {
             console.log('PLayer 2 error');
         }
-    });
+    });   
 }
