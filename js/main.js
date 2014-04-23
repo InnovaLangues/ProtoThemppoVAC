@@ -14,11 +14,10 @@ var player2Container = null;
 var sound1 = null;
 // sound that will be associated with video 2
 var sound2 = null;
-var stop = document.getElementById('record-stop');
+// stop recording
+var stop; // = document.getElementById('record-stop');
 // start recording
-var record = document.getElementById('record-start');
-// modal 1
-var fileDialog1 = null;
+var record; // = document.getElementById('record-start');
 // wich kind of browser
 var isFirefox = !! navigator.mozGetUserMedia;
 var videoFile = !! navigator.mozGetUserMedia ? 'video.gif' : 'video.webm';
@@ -45,8 +44,9 @@ var videoUploaded = false;
 // INIT
 $(document).ready(function() {
     TrackManager.initialize();
-    // modal dialog
-    fileDialog1 = $('#file-dialog-1');
+    stop = document.getElementById('record-stop');
+    // start recording
+    record = document.getElementById('record-start');
     player1Container = $("#video-1-container");
     player2Container = $("#video-2-container");
     record.disabled = false;
@@ -55,11 +55,14 @@ $(document).ready(function() {
     $('button[data-toggle=modal]').click(function() {
         if (typeof $(this).data('id') !== 'undefined') {
             fileButtonCaller = $(this).data('id');
-            console.log(fileButtonCaller);
             if (fileButtonCaller === 'video-1' || fileButtonCaller === 'video-2') {
                 // hide all
                 $('.modal-item').each(function() {
                     $('#' + this.id).hide();
+                });
+                // uncheck all radio buttons
+                $('.track-select').each(function() {
+                    if (this.checked) this.checked = false;
                 });
                 // reset h5 title
                 $('h5.selected-title').text('');
@@ -85,7 +88,6 @@ $(document).ready(function() {
                 if ($('.track-select:checked')[0] && ('teacher-tracks' === mediaSource || 'my-tracks' === mediaSource)) {
                     var name = $('.track-select:checked').parents('tr').prop('id');
                     var track = TrackManager.getTrack(name);
-                    console.log(track);
                     mime = track.extension === 'mp4' ? 'video/mp4' : 'video/webm';
                     videoSrc = track.url;
                     // replace video par audio dans name
@@ -161,66 +163,120 @@ $(document).ready(function() {
         }
         $('h5.selected-title').text($(this).text());
     });
-});
-// handle start recording event
-record.onclick = function() {
-    record.disabled = true;
-    stop.disabled = false;
-    audioUploaded = false;
-    videoUploaded = false;
-    navigator.getUserMedia({
-        audio: true,
-        video: true
-    }, function(stream) {
-        var html = '';
-        html += '<video id="video-2" controls="controls" preload="none"  width="480" height="270">';
-        html += '   <source src="' + window.URL.createObjectURL(stream) + '" type="video/webm" ></source>';
-        html += '</video>';
-        $("#video-2-container").children().remove();
-        $("#video-2-container").append(html);
-        initPlayer2();
-        player2.play();
-        player2.setMuted(true);
-        // spectrum analyzer and Recorder instanciation (for mp3 export)
-        gotStream(stream);
-        if (stream.getAudioTracks().length === 0 && stream.getVideoTracks().length === 0) {
-            alert('you have no webcam nore mic available on your device');
-        } else {
-            if (stream.getAudioTracks().length > 0) {
-                audioRecorder.clear();
-                audioRecorder.record();
+    // delete all recorded tracks
+    $('body').on('click', '#tracks-delete', this, function(el) {
+        bootbox.confirm('<h4>Are you <span style="color:red;font-weight:bold;">sure</span> you want to delete <span style="color:red;font-weight:bold;">all</span> your recorded tracks?</h4>', function(result) {
+            if (result) {
+                var html = '<img width="480" class="no-video-img" height="270" alt="no image" title="PLease select a video" src="media/poster/poster.jpg"/>';
+                TrackManager.deleteAllTracks();
+                $("#video-1-container").children().remove();
+                $("#video-2-container").children().remove();
+                $("#video-1-container").append(html);
+                $("#video-2-container").append(html);
+                sound1 = null;
+                sound2 = null;
             }
-            if (stream.getVideoTracks().length > 0) {
-                if (!isFirefox) {
-                    recordVideo = RecordRTC(stream, {
-                        type: 'video'
-                    });
-                    recordVideo.startRecording();
+        });
+    });
+    // delete one track (modal window button)
+    $('body').on('click', '.track-delete', this, function(el) {
+        // Get track name
+        var trackToRemove = $(this).parents('tr').prop('id');
+        var video1Src = $('#video-1').attr('src');
+        var video2Src = $('#video-2').attr('src');
+        if (video2Src !== undefined || video1Src !== undefined) {
+            var html = '<img width="480" class="no-video-img" height="270" alt="no image" title="PLease select a video" src="media/poster/poster.jpg"/>';
+            var arr;
+            var file;
+            // check if the file we want to delete is used by player 1
+            if (video1Src !== undefined) {
+                arr = video1Src.split('/');
+                file = arr[arr.length - 1];
+                if (file === trackToRemove + '.webm') {
+                    $("#video-1-container").children().remove();
+                    $("#video-1-container").append(html);
+                    sound1 = null;
+                    TrackManager.deletePlaying('video-1');
                 }
             }
-            stop.disabled = false;
+            if (video2Src !== undefined) {
+                arr = video2Src.split('/');
+                file = arr[arr.length - 1];
+                // check if the file we want to delete is used by player 2
+                if (file === trackToRemove + '.webm') {
+                    $("#video-2-container").children().remove();
+                    $("#video-2-container").append(html);
+                    sound2 = null;
+                    TrackManager.deletePlaying('video-2');
+                }
+            }
         }
-    }, function(error) {
-        alert('no webcam nore mic found on youre device!');
+        // delete video track
+        TrackManager.deleteTrack(trackToRemove);
+        // delete associated mp3 track
+        TrackManager.deleteTrack(trackToRemove, true);
+        TrackManager.togglePlayerButtons();
     });
-};
-// handle stop recording event
-stop.onclick = function() {
-    record.disabled = false;
-    stop.disabled = true;
-    player2.setSrc('');
-    fileName = generateFileName();
-    showWaitModal();
-    if (audioRecorder) {
-        audioRecorder.stop();
-        audioRecorder.exportMP3(doneEncoding);
-    }
-    if (recordVideo) {
-        recordVideo.stopRecording(function() {
-            PostBlob(recordVideo.getBlob(), 'video', 'video_' + fileName + '.webm');
+    // handle start recording event
+    record.onclick = function() {
+        record.disabled = true;
+        stop.disabled = false;
+        audioUploaded = false;
+        videoUploaded = false;
+        navigator.getUserMedia({
+            audio: true,
+            video: true
+        }, function(stream) {
+            var html = '';
+            html += '<video id="video-2" controls="controls" preload="none"  width="480" height="270">';
+            html += '   <source src="' + window.URL.createObjectURL(stream) + '" type="video/webm" ></source>';
+            html += '</video>';
+            $("#video-2-container").children().remove();
+            $("#video-2-container").append(html);
+            initPlayer2();
+            player2.play();
+            player2.setMuted(true);
+            // spectrum analyzer and Recorder instanciation (for mp3 export)
+            gotStream(stream);
+            if (stream.getAudioTracks().length === 0 && stream.getVideoTracks().length === 0) {
+                alert('you have no webcam nore mic available on your device');
+            } else {
+                if (stream.getAudioTracks().length > 0) {
+                    audioRecorder.clear();
+                    audioRecorder.record();
+                }
+                if (stream.getVideoTracks().length > 0) {
+                    if (!isFirefox) {
+                        recordVideo = RecordRTC(stream, {
+                            type: 'video'
+                        });
+                        recordVideo.startRecording();
+                    }
+                }
+                stop.disabled = false;
+            }
+        }, function(error) {
+            alert('no webcam nore mic found on youre device!');
         });
-    }
-};
+    };
+    // handle stop recording event
+    stop.onclick = function() {
+        record.disabled = false;
+        stop.disabled = true;
+        player2.setSrc('');
+        fileName = generateFileName();
+        showWaitModal();
+        if (audioRecorder) {
+            audioRecorder.stop();
+            audioRecorder.exportMP3(doneEncoding);
+        }
+        if (recordVideo) {
+            recordVideo.stopRecording(function() {
+                PostBlob(recordVideo.getBlob(), 'video', 'video_' + fileName + '.webm');
+            });
+        }
+    };
+});
 // local file selection
 function handleFileSelect(evt) {
     var file = evt.target.files[0]; // FileList object
@@ -246,7 +302,6 @@ function handleFileSelect(evt) {
             };
         })(file);
         reader.readAsDataURL(file);
-        fileDialog1.modal('hide');
     }
 }
 
@@ -279,25 +334,12 @@ function PostBlob(blob, fileType, fileName) {
     xhr('save.php', formData, null, function(fileURL) {});
 }
 
-function deleteAudioVideoFiles() {
-    deleteFiles.disabled = true;
-    if (!fileName) return;
-    var formData = new FormData();
-    formData.append('delete-file', fileName);
-    xhr('delete.php', formData, null, function(response) {
-        console.log(response);
-    });
-    fileName = null;
-    progressCtnr.innerHTML = '';
-}
-
 function xhr(url, data, progress, callback) {
     var request = new XMLHttpRequest();
     request.onreadystatechange = function() {
         if (request.readyState === 4 && request.status === 200) {
             //callback(request.responseText);
             var track = JSON.parse(request.responseText);
-            console.log(track);
             TrackManager.addTrack(track);
             if ('video' === track.type) {
                 var html = '';
@@ -319,13 +361,11 @@ function xhr(url, data, progress, callback) {
         }
     };
     request.upload.onprogress = function(e) {
-        if (!progress)
-            return;
+        if (!progress) return;
         if (e.lengthComputable) {
             progress.value = (e.loaded / e.total) * 100;
             progress.textContent = progress.value; // Fallback for unsupported browsers.
         }
-
         if (progress.value === 100) {
             progress.value = 0;
         }
@@ -333,7 +373,7 @@ function xhr(url, data, progress, callback) {
     request.open('POST', url);
     request.send(data);
 }
-
+///////////////////////////////////////////// ANALYSER ////////////////////////////////////////////////////
 function cancelAnalyserUpdates() {
     window.cancelAnimationFrame(rafID);
     rafID = null;
