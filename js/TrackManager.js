@@ -45,6 +45,8 @@ var TrackManager = {
             el.data.stop();
             return false;
         });
+  
+
         // Delete a track
         /*$('body').on('click', '.track-delete', this, function(el) {
             // Get track name
