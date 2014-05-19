@@ -244,7 +244,7 @@ var TrackManager = {
         var enabled = false;
         var hasSource = false;
         // check that player1 or player2 have a source
-        if ((player1 && $('#' + player1.media.id).attr('src') !== undefined) || (player2 && $('#' + player2.media.id).attr('src') !== undefined)) {
+        if ((player1 && ($('#' + player1.media.id).attr('src') !== undefined) || $('#' + player1.media.id + ' source').attr('src') !== undefined ) || (player2 && $('#' + player2.media.id).attr('src') !== undefined)) {
             hasSource = true;
         }
         if ((this.playing.length === 0 || this.paused) && this.tracks.length !== 0 && hasSource) {
