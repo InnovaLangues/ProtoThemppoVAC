@@ -308,7 +308,11 @@ function handleFileSelect(evt) {
 function generateFileName() {
     // Generate unique name
     var date = new Date();
+    console.log(date);
+    console.log(date.getMonth());
     var month = date.getMonth();
+    // The getMonth() method returns the month (from 0 to 11)
+    month++;
     if (month < 10) month = '0' + month.toString();
     var day = date.getDate();
     if (day < 10) day = '0' + day.toString();

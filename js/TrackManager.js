@@ -154,13 +154,14 @@ var TrackManager = {
         request.send(formData);
     },
     /**
-     * Start playing selected tracks
+     * Start playing selected tracks (on both players)
      */
     play: function() {
         this.paused = false;
         var manager = this;
         var player1Src = '';
         var player2Src = '';
+
         // !! players && sounds are in main.js
         if (player1) player1Src = $('#' + player1.media.id).attr('src');
         if (player2) player2Src = $('#' + player2.media.id).attr('src');
@@ -172,7 +173,9 @@ var TrackManager = {
         if (player2 && player2Src !== '') {
             player2.play();
             manager.playing.push('video-2');
-            if (sound2 !== null) sound2.play();
+            if (sound2 !== null) {
+                sound2.play();
+            }
         }
         // Manage buttons state
         this.togglePlayerButtons();
