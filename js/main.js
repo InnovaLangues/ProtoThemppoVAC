@@ -143,7 +143,7 @@ $(document).ready(function() {
             }
         }
     });
-    // évènement de choix du fichier à uploader
+    // modal file input change event
     $('#open-file').change(function(e) {
         handleFileSelect(e);
     });
@@ -439,9 +439,18 @@ function initPlayer1() {
     player1 = new MediaElementPlayer('#video-1', {
         enableAutosize: false,
         pauseOtherPlayers: false,
-        features: ['playpause', 'progress', 'current', 'duration', 'tracks', 'volume', 'fullscreen'],
+        features: ['playpause', 'progress', 'current', 'duration', 'tracks'],
         success: function(mediaElement, domObject) {
-            mediaElement.addEventListener('timeupdate', function(e) {}, false);
+            // listen to event in order to sync audio and video (if necessary)           
+            mediaElement.addEventListener('seeked', function(e) {
+                if (sound1) sound1.currentTime = e.target.currentTime;
+            }, false);
+            mediaElement.addEventListener('play', function(e) {
+                if (sound1) sound1.play();
+            }, false);
+            mediaElement.addEventListener('pause', function(e) {
+                if (sound1) sound1.pause();
+            }, false);
             mediaElement.addEventListener('ended', function(e) {
                 player1Ended = true;
                 TrackManager.deletePlaying('video-1');
@@ -460,8 +469,15 @@ function initPlayer2() {
         pauseOtherPlayers: false,
         features: ['playpause', 'progress', 'current', 'duration', 'tracks'],
         success: function(mediaElement, domObject) {
-            mediaElement.addEventListener('timeupdate', function(e) {
-                //document.getElementById('current-time').innerHTML = mediaElement.currentTime;
+            // listen to event in order to sync audio and video (if necessary)           
+            mediaElement.addEventListener('seeked', function(e) {
+                if (sound2) sound2.currentTime = e.target.currentTime;
+            }, false);
+            mediaElement.addEventListener('play', function(e) {
+                if (sound2) sound2.play();
+            }, false);
+            mediaElement.addEventListener('pause', function(e) {
+                if (sound2) sound2.pause();
             }, false);
             mediaElement.addEventListener('ended', function(e) {
                 player2Ended = true;
