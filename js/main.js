@@ -450,7 +450,11 @@ function initPlayer1() {
                 if (sound1) sound1.currentTime = e.target.currentTime;
             }, false);
             mediaElement.addEventListener('play', function(e) {
-                if (sound1) sound1.play();
+                if (sound1) {
+                    sound1.volume = mediaElement.volume;
+                    sound1.muted = mediaElement.muted;
+                    sound1.play();
+                }
             }, false);
             mediaElement.addEventListener('pause', function(e) {
                 if (sound1) sound1.pause();
@@ -484,7 +488,11 @@ function initPlayer2() {
                 if (sound2) sound2.currentTime = e.target.currentTime;
             }, false);
             mediaElement.addEventListener('play', function(e) {
-                if (sound2) sound2.play();
+                if (sound2) {                    
+                    sound2.volume = mediaElement.volume;
+                    sound2.muted = mediaElement.muted;
+                    sound2.play();
+                }
             }, false);
             mediaElement.addEventListener('pause', function(e) {
                 if (sound2) sound2.pause();
