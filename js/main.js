@@ -439,7 +439,7 @@ function initPlayer1() {
     player1 = new MediaElementPlayer('#video-1', {
         enableAutosize: false,
         pauseOtherPlayers: false,
-        features: ['playpause', 'progress', 'current', 'duration', 'tracks'],
+        features: ['playpause', 'progress', 'current', 'duration', 'tracks', 'volume'],
         success: function(mediaElement, domObject) {
             // listen to event in order to sync audio and video (if necessary)           
             mediaElement.addEventListener('seeked', function(e) {
@@ -450,6 +450,12 @@ function initPlayer1() {
             }, false);
             mediaElement.addEventListener('pause', function(e) {
                 if (sound1) sound1.pause();
+            }, false);
+            mediaElement.addEventListener('volumechange', function(e) {
+                if (sound1) {
+                    sound1.volume = mediaElement.volume;
+                    sound1.muted = mediaElement.muted;
+                }
             }, false);
             mediaElement.addEventListener('ended', function(e) {
                 player1Ended = true;
@@ -467,7 +473,7 @@ function initPlayer2() {
     player2 = new MediaElementPlayer('#video-2', {
         enableAutosize: false,
         pauseOtherPlayers: false,
-        features: ['playpause', 'progress', 'current', 'duration', 'tracks'],
+        features: ['playpause', 'progress', 'current', 'duration', 'tracks', 'volume'],
         success: function(mediaElement, domObject) {
             // listen to event in order to sync audio and video (if necessary)           
             mediaElement.addEventListener('seeked', function(e) {
@@ -478,6 +484,12 @@ function initPlayer2() {
             }, false);
             mediaElement.addEventListener('pause', function(e) {
                 if (sound2) sound2.pause();
+            }, false);
+            mediaElement.addEventListener('volumechange', function(e) {
+                if (sound2) {
+                    sound2.volume = mediaElement.volume;
+                    sound2.muted = mediaElement.muted;
+                }
             }, false);
             mediaElement.addEventListener('ended', function(e) {
                 player2Ended = true;
