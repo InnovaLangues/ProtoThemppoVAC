@@ -462,7 +462,7 @@ function initPlayer1() {
                 TrackManager.deletePlaying('video-1');
                 TrackManager.togglePlayerButtons();
             }, false);
-        },
+        }, 
         error: function() {
             console.log('PLayer 1 error');
         }
