@@ -1,6 +1,7 @@
 var player1Ended = false;
 var player2Ended = false;
 // Connected user
+var userId = '';
 var isStudent = true;
 // media source (model, myrecords, web, local)
 var mediaSource = null;
@@ -14,16 +15,16 @@ var player2Container = null;
 var sound1 = null;
 // sound that will be associated with video 2
 var sound2 = null;
-// stop recording
-var stop; // = document.getElementById('record-stop');
-// start recording
-var record; // = document.getElementById('record-start');
-// wich kind of browser
+// stop recording button
+var stop;
+// start recording button
+var record;
+// web browser
 var isFirefox = !! navigator.mozGetUserMedia;
 var videoFile = !! navigator.mozGetUserMedia ? 'video.gif' : 'video.webm';
-// recordAudio and recordVideo are used for merged VIDEO + AUDIO file
+// recordAudio and recordVideo are used for client side VIDEO + AUDIO merge
 // recordVideo is used only for video
-// audioRecorder is used for mp3 export
+// audioRecorder is used for mp3 export and audio signal visualisation (spectrum analyser)
 var recordAudio, recordVideo, audioRecorder;
 // SPECTRUM ANALYSER
 var audioContext = new AudioContext();
@@ -41,9 +42,40 @@ var fileButtonCaller;
 // 
 var audioUploaded = false;
 var videoUploaded = false;
-// INIT
+
+// ON READY
 $(document).ready(function() {
-    TrackManager.initialize();
+
+    // open authentication modal
+    var options = {
+        "backdrop": "static",
+        "keyboard": false,
+        "show": true
+    };
+    $('#authentication-dialog').modal(options);
+    $('#authentication-dialog').on('shown.bs.modal', function(e) {
+        $('#usr-ok').prop('disabled', true);
+        // control text-input
+        $('#user').on('input', function(){
+            if($(this).val() !== ''){
+                $('#usr-ok').prop('disabled', false);
+            }
+            else{
+                $('#usr-ok').prop('disabled', true);
+            }
+        });
+    });
+    $('#authentication-dialog').on('hidden.bs.modal', function(e) {
+        // init app
+        userId = $('#user').val();
+        $('#user-name').html('<span class="glyphicon glyphicon-user"></span> ' + userId);    
+        init();
+    });
+});
+
+// INIT APP & BIND EVENTS
+function init() {
+    TrackManager.initialize(userId);
     stop = document.getElementById('record-stop');
     // start recording
     record = document.getElementById('record-start');
@@ -163,20 +195,21 @@ $(document).ready(function() {
         }
         $('h5.selected-title').text($(this).text());
     });
-    // delete all recorded tracks
-    $('body').on('click', '#tracks-delete', this, function(el) {
-        bootbox.confirm('<h4>Are you <span style="color:red;font-weight:bold;">sure</span> you want to delete <span style="color:red;font-weight:bold;">all</span> your recorded tracks?</h4>', function(result) {
-            if (result) {
-                var html = '<img width="100%" class="no-video-img" height="270" alt="no image" title="PLease select a video" src="media/poster/poster.jpg"/>';
-                TrackManager.deleteAllTracks();
-                $("#video-1-container").children().remove();
-                $("#video-2-container").children().remove();
-                $("#video-1-container").append(html);
-                $("#video-2-container").append(html);
-                sound1 = null;
-                sound2 = null;
-            }
-        });
+    // delete all recorded tracks show confirm
+    $('body').on('click', '#tracks-delete', this, function(el) {        
+        $('#del-all-confirm-dialog').modal('show');        
+    });
+    // delete all recorded tracks confirm OK
+    $('#del-all-confirm-dialog').find('.modal-footer #confirm').on('click', function(){
+        var html = '<img width="100%" class="no-video-img" height="270" alt="no image" title="PLease select a video" src="media/poster/poster.jpg"/>';
+        TrackManager.deleteAllTracks();
+        $("#video-1-container").children().remove();
+        $("#video-2-container").children().remove();
+        $("#video-1-container").append(html);
+        $("#video-2-container").append(html);
+        sound1 = null;
+        sound2 = null;
+        $('#del-all-confirm-dialog').modal('hide');
     });
     // delete one track (modal window button)
     $('body').on('click', '.track-delete', this, function(el) {
@@ -276,7 +309,7 @@ $(document).ready(function() {
             });
         }
     };
-});
+}
 // local file selection
 function handleFileSelect(evt) {
     var file = evt.target.files[0]; // FileList object
@@ -322,6 +355,14 @@ function generateFileName() {
     if (seconds < 10) seconds = '0' + seconds;
     return date.getFullYear() + '-' + month + '-' + day + '_' + hours + 'h' + minutes + 'm' + seconds;
 }
+/**
+ *  generate a unique user name
+ */
+function getUser() {
+    var date = new Date();
+    var uid = date.getMonth().toString() + date.getDate().toString() + date.getMinutes().toString() + date.getSeconds().toString() + date.getMilliseconds().toString() + (Math.random() * Math.pow(36, 4) << 0).toString(36).slice(-4);
+    return uid;
+}
 
 function PostBlob(blob, fileType, fileName) {
     console.log('PostBlob is invoked', arguments);
@@ -331,6 +372,8 @@ function PostBlob(blob, fileType, fileName) {
     formData.append(fileType + '-blob', blob);
     var owner = isStudent ? 'student' : 'teacher';
     formData.append(fileType + '-owner', owner);
+    // user id to create unique folder
+    formData.append('uid', userId);
     TrackManager.togglePlayerButtons();
     // POST the Blob
     xhr('save.php', formData, null, function(fileURL) {});
@@ -375,7 +418,135 @@ function xhr(url, data, progress, callback) {
     request.open('POST', url);
     request.send(data);
 }
-///////////////////////////////////////////// ANALYSER ////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+// AUDIO RECORDER 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+function gotStream(stream) {
+    inputPoint = audioContext.createGain();
+    // Create an AudioNode from the stream.
+    realAudioInput = audioContext.createMediaStreamSource(stream);
+    audioInput = realAudioInput;
+    audioInput.connect(inputPoint);
+    analyserNode = audioContext.createAnalyser();
+    analyserNode.fftSize = 2048;
+    inputPoint.connect(analyserNode);
+    // for audio MP3 export
+    audioRecorder = new Recorder(inputPoint);
+    zeroGain = audioContext.createGain();
+    zeroGain.gain.value = 0.0;
+    inputPoint.connect(zeroGain);
+    zeroGain.connect(audioContext.destination);
+    updateAnalysers();
+}
+// mp3 encoding callback
+function doneEncoding(blob) {
+    PostBlob(blob, 'audio', 'audio_' + fileName + '.mp3');
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+// MEDIAELEMENT JS PLAYERS 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+function initPlayer1() {
+    player1 = new MediaElementPlayer('#video-1', {
+        enableAutosize: false,
+        pauseOtherPlayers: false,
+        features: ['playpause', 'progress', 'current', 'duration', 'tracks', 'volume'],
+        success: function(mediaElement, domObject) {
+            // listen to event in order to sync audio and video (if necessary)           
+            mediaElement.addEventListener('seeked', function(e) {
+                if (sound1) sound1.currentTime = e.target.currentTime;
+            }, false);
+            mediaElement.addEventListener('play', function(e) {
+                if (sound1) {
+                    sound1.volume = mediaElement.volume;
+                    sound1.muted = mediaElement.muted;
+                    sound1.play();
+                }
+            }, false);
+            mediaElement.addEventListener('pause', function(e) {
+                if (sound1) sound1.pause();
+            }, false);
+            mediaElement.addEventListener('volumechange', function(e) {
+                if (sound1) {
+                    sound1.volume = mediaElement.volume;
+                    sound1.muted = mediaElement.muted;
+                }
+            }, false);
+            mediaElement.addEventListener('ended', function(e) {
+                player1Ended = true;
+                TrackManager.deletePlaying('video-1');
+                TrackManager.togglePlayerButtons();
+            }, false);
+        },
+        error: function() {
+            console.log('PLayer 1 error');
+        }
+    });
+}
+
+function initPlayer2() {
+    player2 = new MediaElementPlayer('#video-2', {
+        enableAutosize: false,
+        pauseOtherPlayers: false,
+        features: ['playpause', 'progress', 'current', 'duration', 'tracks', 'volume'],
+        success: function(mediaElement, domObject) {
+            // listen to event in order to sync audio and video (if necessary)           
+            mediaElement.addEventListener('seeked', function(e) {
+                if (sound2) sound2.currentTime = e.target.currentTime;
+            }, false);
+            mediaElement.addEventListener('play', function(e) {
+                if (sound2) {
+                    sound2.volume = mediaElement.volume;
+                    sound2.muted = mediaElement.muted;
+                    sound2.play();
+                }
+            }, false);
+            mediaElement.addEventListener('pause', function(e) {
+                if (sound2) sound2.pause();
+            }, false);
+            mediaElement.addEventListener('volumechange', function(e) {
+                if (sound2) {
+                    sound2.volume = mediaElement.volume;
+                    sound2.muted = mediaElement.muted;
+                }
+            }, false);
+            mediaElement.addEventListener('ended', function(e) {
+                player2Ended = true;
+                TrackManager.deletePlaying('video-2');
+                TrackManager.togglePlayerButtons();
+            }, false);
+        },
+        error: function() {
+            console.log('PLayer 2 error');
+        }
+    });
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+// MODAL WINDOWS
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+function showWaitModal() {
+    var progress = '';
+    progress += '<div class="modal" id="pleaseWaitDialog" data-backdrop="static" data-keyboard="false">';
+    progress += '<div class="modal-dialog">';
+    progress += '<div class="modal-content">';
+    progress += '   <div class="modal-header">';
+    progress += '       <h3>Processing audio and video files...</h3>';
+    progress += '   </div>';
+    progress += '   <div class="modal-body text-center">';
+    progress += '       <img src="css/img/loader.gif">';
+    progress += '   </div>';
+    progress += '</div>';
+    progress += '   </div>';
+    progress += '</div>';
+    $('body').append(progress);
+    $('#pleaseWaitDialog').modal();
+}
+
+function hideWaitModal() {
+    $('#pleaseWaitDialog').modal('hide');
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+// SPECTRUM ANALYSER
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
 function cancelAnalyserUpdates() {
     window.cancelAnimationFrame(rafID);
     rafID = null;
@@ -413,124 +584,4 @@ function updateAnalysers(time) {
         }
     }
     rafID = window.requestAnimationFrame(updateAnalysers);
-}
-
-function gotStream(stream) {
-    inputPoint = audioContext.createGain();
-    // Create an AudioNode from the stream.
-    realAudioInput = audioContext.createMediaStreamSource(stream);
-    audioInput = realAudioInput;
-    audioInput.connect(inputPoint);
-    analyserNode = audioContext.createAnalyser();
-    analyserNode.fftSize = 2048;
-    inputPoint.connect(analyserNode);
-    // for audio MP3 export
-    audioRecorder = new Recorder(inputPoint);
-    zeroGain = audioContext.createGain();
-    zeroGain.gain.value = 0.0;
-    inputPoint.connect(zeroGain);
-    zeroGain.connect(audioContext.destination);
-    updateAnalysers();
-}
-// mp3 encoding callback
-function doneEncoding(blob) {
-    PostBlob(blob, 'audio', 'audio_' + fileName + '.mp3');
-}
-
-function initPlayer1() {
-    player1 = new MediaElementPlayer('#video-1', {
-        enableAutosize: false,
-        pauseOtherPlayers: false,
-        features: ['playpause', 'progress', 'current', 'duration', 'tracks', 'volume'],
-        success: function(mediaElement, domObject) {
-            // listen to event in order to sync audio and video (if necessary)           
-            mediaElement.addEventListener('seeked', function(e) {
-                if (sound1) sound1.currentTime = e.target.currentTime;
-            }, false);
-            mediaElement.addEventListener('play', function(e) {
-                if (sound1) {
-                    sound1.volume = mediaElement.volume;
-                    sound1.muted = mediaElement.muted;
-                    sound1.play();
-                }
-            }, false);
-            mediaElement.addEventListener('pause', function(e) {
-                if (sound1) sound1.pause();
-            }, false);
-            mediaElement.addEventListener('volumechange', function(e) {
-                if (sound1) {
-                    sound1.volume = mediaElement.volume;
-                    sound1.muted = mediaElement.muted;
-                }
-            }, false);
-            mediaElement.addEventListener('ended', function(e) {
-                player1Ended = true;
-                TrackManager.deletePlaying('video-1');
-                TrackManager.togglePlayerButtons();
-            }, false);
-        }, 
-        error: function() {
-            console.log('PLayer 1 error');
-        }
-    });
-}
-
-function initPlayer2() {
-    player2 = new MediaElementPlayer('#video-2', {
-        enableAutosize: false,
-        pauseOtherPlayers: false,
-        features: ['playpause', 'progress', 'current', 'duration', 'tracks', 'volume'],
-        success: function(mediaElement, domObject) {
-            // listen to event in order to sync audio and video (if necessary)           
-            mediaElement.addEventListener('seeked', function(e) {
-                if (sound2) sound2.currentTime = e.target.currentTime;
-            }, false);
-            mediaElement.addEventListener('play', function(e) {
-                if (sound2) {                    
-                    sound2.volume = mediaElement.volume;
-                    sound2.muted = mediaElement.muted;
-                    sound2.play();
-                }
-            }, false);
-            mediaElement.addEventListener('pause', function(e) {
-                if (sound2) sound2.pause();
-            }, false);
-            mediaElement.addEventListener('volumechange', function(e) {
-                if (sound2) {
-                    sound2.volume = mediaElement.volume;
-                    sound2.muted = mediaElement.muted;
-                }
-            }, false);
-            mediaElement.addEventListener('ended', function(e) {
-                player2Ended = true;
-                TrackManager.deletePlaying('video-2');
-                TrackManager.togglePlayerButtons();
-            }, false);
-        },
-        error: function() {
-            console.log('PLayer 2 error');
-        }
-    });
-}
-
-function showWaitModal() {
-    var progress = '';
-    progress += '<div class="modal" id="pleaseWaitDialog" data-backdrop="static" data-keyboard="false">';
-    progress += '<div class="modal-dialog">';
-    progress += '<div class="modal-content">';
-    progress += '   <div class="modal-header">';
-    progress += '       <h3>Processing audio and video files...</h3>';
-    progress += '   </div>';
-    progress += '   <div class="modal-body text-center">';
-    progress += '       <img src="css/img/loader.gif">';
-    progress += '   </div>';
-    progress += '</div>';
-    progress += '   </div>';
-    progress += '</div>';
-    $('body').append(progress);
-    $('#pleaseWaitDialog').modal();
-}
-
-function hideWaitModal() {
-    $('#pleaseWaitDialog').modal('hide');
 }

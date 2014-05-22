@@ -18,7 +18,7 @@ var TrackManager = {
     /**
      * Initialize the track manager (register events)
      */
-    initialize: function() {
+    initialize: function(uid) {
         // Store buttons
         this.buttonPlay = $('#tracks-play');
         this.buttonPause = $('#tracks-pause');
@@ -29,7 +29,7 @@ var TrackManager = {
         // model tracks container
         this.t_container = $('#ttracks-container tbody');
         // Load tracks
-        this.loadTracks();
+        this.loadTracks(uid);
         // Play selected tracks
         $('body').on('click', '#tracks-play', this, function(el) {
             el.data.play();
@@ -68,7 +68,7 @@ var TrackManager = {
             html += '    <td>';
             if (track.downloadable) {
                 // Download button
-                var file = track.name + '.' + track.extension; //('audio' === track.type ? '.wav' : '.webm');
+                var file = track.uid + '/' + track.name + '.' + track.extension; //('audio' === track.type ? '.wav' : '.webm');
                 html += '   <a href="download.php?file=' + file + '" target="_blank" class="track-download btn btn-sm btn-default" role="button">';
                 html += '       <span class="glyphicon glyphicon-download-alt"></span>';
                 html += '       <span class="sr-only">Download</span>';
@@ -135,9 +135,10 @@ var TrackManager = {
     /**
      * Load existing tracks from server
      */
-    loadTracks: function() {
+    loadTracks: function(uid) {
         var manager = this;
         var formData = new FormData();
+        formData.append('uid', uid);
         var request = new XMLHttpRequest();
         request.onreadystatechange = function() {
             if (4 === request.readyState && 200 === request.status) {
@@ -150,7 +151,7 @@ var TrackManager = {
                 }
             }
         };
-        request.open('GET', 'list.php');
+        request.open('POST', 'list.php');
         request.send(formData);
     },
     /**
@@ -279,7 +280,8 @@ var TrackManager = {
     /**
      * Save files on server
      */
-    save: function(fileType, fileName, blob) {
+    /*save: function(fileType, fileName, blob) {
+        console.log('save');
         var manager = this;
         // FormData
         var formData = new FormData();
@@ -300,20 +302,11 @@ var TrackManager = {
             }
         };
         request.upload.onprogress = function(e) {
-            /*if (!progress)
-             return;
-             if (e.lengthComputable) {
-             progress.value = (e.loaded / e.total) * 100;
-             progress.textContent = progress.value; // Fallback for unsupported browsers.
-             }
-             
-             if (progress.value == 100) {
-             progress.value = 0;
-             }*/
+           
         };
         request.open('POST', 'save.php');
         request.send(formData);
-    },
+    },*/
     /**
      * Retrieve the track object in tracks list from its name
      */

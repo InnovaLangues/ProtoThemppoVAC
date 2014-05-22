@@ -12,7 +12,7 @@
         <script type="text/javascript" src="js/libs/jquery.min.js"></script>
         <script type="text/javascript" src="js/libs/bootstrap.min.js"></script>
         <script type="text/javascript" src="js/libs/mediaelement-and-player.min.js"></script>
-        <script type="text/javascript" src="js/libs/bootbox.js"></script>
+        <!--<script type="text/javascript" src="js/libs/bootbox.js"></script>-->
         <script type="text/javascript" src="js/libs/RecordRTC.js"></script>
         <script type="text/javascript" src="js/libs/recorder.js"></script>
         <!-- MY JS SCRIPTS -->
@@ -24,11 +24,14 @@
             <div class="page-header">
                 <div class="row">
                     <div class="col-md-2">
-                        <img src="css/img/logo_innova.jpg" alt="logo">
+                        <img src="css/img/logo_innova.jpg" alt="innova-logo">
                     </div>
-                    <div class="col-md-10">
+                    <div class="col-md-8">
                         <h1>Themppo <small>Prototype AAC/VAC</small></h1>
                         <h3>! Only works on Google Chrome !</h3>
+                    </div>
+                    <div class="col-md-2">
+                        <h4 id="user-name"></h4>
                     </div>
                 </div>
             </div>
@@ -63,36 +66,15 @@
                             <h5><i>Use these controls to play / pause player 1 <strong>AND</strong> player 2 sound and video in the same time</i></h5>
                         </div>
                         <div class="panel-body text-center">
-
-                                <button id="tracks-play" class="btn btn-primary btn-default" role="button" disabled="disabled">
-                                <span class="glyphicon glyphicon-play"></span>
-                                </button>
-                            
-                            
-                                <button id="tracks-pause" class="btn btn-default" role="button" disabled="disabled">
-                                <span class="glyphicon glyphicon-pause"></span>
-                                </button>
-                           
-                                <button id="tracks-stop" class="btn btn-default" role="button" disabled="disabled">
-                                <span class="glyphicon glyphicon-stop"></span>
-                                </button>
-                           <!--
-                            <div class="top5">
-                                <button id="tracks-play" class="btn btn-primary btn-default" role="button" disabled="disabled">
-                                <span class="glyphicon glyphicon-play"></span> Play
-                                </button>
-                            </div>
-                            <div class="top5">
-                                <button id="tracks-pause" class="btn btn-default" role="button" disabled="disabled">
-                                <span class="glyphicon glyphicon-pause"></span> Pause
-                                </button>
-                            </div>
-                            <div class="top5">
-                                <button id="tracks-stop" class="btn btn-default" role="button" disabled="disabled">
-                                <span class="glyphicon glyphicon-stop"></span> Stop
-                                </button>
-                            </div>
-                            -->
+                            <button id="tracks-play" class="btn btn-primary btn-default" role="button" disabled="disabled">
+                            <span class="glyphicon glyphicon-play"></span>
+                            </button>
+                            <button id="tracks-pause" class="btn btn-default" role="button" disabled="disabled">
+                            <span class="glyphicon glyphicon-pause"></span>
+                            </button>
+                            <button id="tracks-stop" class="btn btn-default" role="button" disabled="disabled">
+                            <span class="glyphicon glyphicon-stop"></span>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -128,33 +110,31 @@
                     </div>
                 </div>
             </div>
-            
-
-            <!-- SYNC CONTROLS -->
-            <!--
-            <hr/>
-            <div class="row top15">
-                <div class="col-md-12 text-center">
-                    <div class="panel panel-default">
-                        <div class="panel-heading">
-                            <h3 class="panel-title">Sync controls</h3>
-                            <h5><i>Use these controls to play / pause player 1 <strong>AND</strong> player 2 sound and video in the same time</i></h5>
+            <!-- AUTHENTICATION MODAL -->
+            <div class="modal fade" id="authentication-dialog" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h4 class="modal-title" id="help-modal-label">Please enter your name</h4>
+                            <i>If you want to retrieve your old recorded files please remember the name you used...</i>
                         </div>
-                        <div class="panel-body text-center">
-                            <button id="tracks-play" class="btn btn-primary btn-default" role="button" disabled="disabled">
-                            <span class="glyphicon glyphicon-play"></span> Play
-                            </button>
-                            <button id="tracks-pause" class="btn btn-default" role="button" disabled="disabled">
-                            <span class="glyphicon glyphicon-pause"></span> Pause
-                            </button>
-                            <button id="tracks-stop" class="btn btn-default" role="button" disabled="disabled">
-                            <span class="glyphicon glyphicon-stop"></span> Stop
-                            </button>
+                        <div class="modal-body">
+                            <table class="table">
+                            <tbody>
+                                <tr>
+                                    <td>
+                                    <button type="button" class="btn btn-default disabled"><span class="glyphicon glyphicon-user"></span> your name</button>
+                                    <td>
+                                        <input type="text" id="user" />
+                                        <button type="button" id="usr-ok" class="btn btn-default" data-dismiss="modal" title="valid"><span class="glyphicon glyphicon-ok"></span></button>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
             </div>
-            -->
             <!-- VIDEO MODAL FILE DIALOG -->
             <div class="modal fade" id="file-dialog" tabindex="-1" role="dialog" aria-hidden="true">
                 <div class="modal-dialog">
@@ -254,6 +234,24 @@
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- DELETE ALL CONFIRMATION MODAL -->
+            <div class="modal fade" id="del-all-confirm-dialog" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                            <h5 class="modal-title">Sure ?</h5>
+                        </div>
+                        <div class="modal-body">
+                            <h4>Are you <span style="color:red;font-weight:bold;">sure</span> you want to delete <span style="color:red;font-weight:bold;">all</span> your recorded tracks?</h4>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-danger" id="confirm">Continue</button>
                         </div>
                     </div>
                 </div>
