@@ -4,43 +4,59 @@
 #stracks-container td {
     vertical-align: middle !important;
 }
-
 #analyser {
-    
     background: #202020;
     width: 138px;
     height: 34px;
-    border-radius : 4px;
+    border-radius: 4px;
     vertical-align: middle;
     /*box-shadow: 0px 0px 10px black;*/
 }
-
-#open-video{
-
-}
-
 div.fileinputs {
     position: relative;
 }
-
 div.fakefile {
     position: absolute;
     top: 0px;
     left: 0px;
     z-index: 1;
 }
-
-
-
 div.fileinputs input.file {
     position: relative;
     text-align: right;
-    opacity:0 ;
-    filter:alpha(opacity: 0);
+    opacity: 0;
+    filter: alpha(opacity: 0);
     opacity: 0;
     z-index: 2;
 }
-
-.file-type-chooser{
+.file-type-chooser {
     padding-bottom: 10px;
+}
+.top5 {
+    margin-top: 5px;
+}
+.top7 {
+    margin-top: 7px;
+}
+.top10 {
+    margin-top: 10px;
+}
+.top15 {
+    margin-top: 15px;
+}
+.top17 {
+    margin-top: 17px;
+}
+.top30 {
+    margin-top: 30px;
+}
+.control-container {
+    border-top: 1px #ddd solid;
+    margin: 10px;
+    padding: 5px;
+}
+.video-container {
+    border: 1px #ddd solid;
+    border-radius: 5px;
+    padding: 10px;
 }

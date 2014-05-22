@@ -34,88 +34,127 @@
             </div>
             <!-- VIDEO PLAYER / RECORDER ROW -->
             <div class="row">
-                <!-- VIDEO 1 -->
-                <div class="col-md-6">
-                    <div id="video-1-container">
-                        <img width="480" class="no-video-img" height="270" alt="no image" title="PLease select a video" src="media/poster/poster.jpg"/>
+                <!-- VIDEO 1 VIDEO & CONTROLS-->
+                <div class="col-md-5 top5 text-center video-container">
+                    <!-- VIDEO 1 ROW -->
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div id="video-1-container">
+                                <img width="100%" class="no-video-img" height="270" alt="no image" title="No video" src="media/poster/poster.jpg"/>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- VIDEO 1 CONTROLS -->
+                    <div class="row top5">
+                        <div class="col-md-12">
+                            <div class="control-container">
+                                <button class="btn btn-default" role="button" data-id="video-1" title="Player 1 source" data-toggle="modal" data-target="#file-dialog">
+                                <span class="glyphicon glyphicon-film"></span>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <!-- VIDEO 2 -->
-                <div class="col-md-6">
-                    <div id="video-2-container">
-                        <img width="480" class="no-video-img" height="270" alt="no image" title="PLease select a video" src="media/poster/poster.jpg"/>
+                <!-- SYNC CONTROLS -->
+                <div class="col-md-2">
+                    <div class="panel panel-default top5">
+                        <div class="panel-heading" style="text-align:center;">
+                            <h3 class="panel-title">Sync controls</h3>
+                            <h5><i>Use these controls to play / pause player 1 <strong>AND</strong> player 2 sound and video in the same time</i></h5>
+                        </div>
+                        <div class="panel-body text-center">
+
+                                <button id="tracks-play" class="btn btn-primary btn-default" role="button" disabled="disabled">
+                                <span class="glyphicon glyphicon-play"></span>
+                                </button>
+                            
+                            
+                                <button id="tracks-pause" class="btn btn-default" role="button" disabled="disabled">
+                                <span class="glyphicon glyphicon-pause"></span>
+                                </button>
+                           
+                                <button id="tracks-stop" class="btn btn-default" role="button" disabled="disabled">
+                                <span class="glyphicon glyphicon-stop"></span>
+                                </button>
+                           <!--
+                            <div class="top5">
+                                <button id="tracks-play" class="btn btn-primary btn-default" role="button" disabled="disabled">
+                                <span class="glyphicon glyphicon-play"></span> Play
+                                </button>
+                            </div>
+                            <div class="top5">
+                                <button id="tracks-pause" class="btn btn-default" role="button" disabled="disabled">
+                                <span class="glyphicon glyphicon-pause"></span> Pause
+                                </button>
+                            </div>
+                            <div class="top5">
+                                <button id="tracks-stop" class="btn btn-default" role="button" disabled="disabled">
+                                <span class="glyphicon glyphicon-stop"></span> Stop
+                                </button>
+                            </div>
+                            -->
+                        </div>
                     </div>
-                    <br/>
+                </div>
+                <!-- VIDEO 2 VIDEO & CONTROLS -->
+                <div class="col-md-5 top5 text-center video-container">
+                    <!-- VIDEO 2 ROW -->
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div id="video-2-container">
+                                <img width="100%" class="no-video-img" height="270" alt="no image" title="No video" src="media/poster/poster.jpg"/>
+                            </div>
+                        </div>
+                    </div>
                     <!-- VIDEO 2 CONTROLS -->
-                    <div class="row">
+                    <div class="row top5">
                         <div class="col-md-12">
-                            <button id="record-start" class="btn btn-primary" role="button">
-                            <span class="glyphicon glyphicon-record"></span> Start recording
-                            </button>
-                            <button id="record-stop" class="btn btn-default" role="button" disabled="disabled">
-                            <span class="glyphicon glyphicon-stop"></span> Stop recording
-                            </button>
-                            <canvas id="analyser" title="Spectrum analyser"></canvas>
+                            <div class="control-container">
+                                <button id="record-start" class="btn btn-primary" role="button">
+                                <span class="glyphicon glyphicon-record"></span> Rec start
+                                </button>
+                                <button id="record-stop" class="btn btn-default" role="button" disabled="disabled">
+                                <span class="glyphicon glyphicon-stop"></span> Rec stop
+                                </button>
+                                <canvas id="analyser" title="Spectrum analyser"></canvas>
+                                <button class="btn btn-default" role="button" data-id="video-2" title="Player 2 source" data-toggle="modal" data-target="#file-dialog">
+                                <span class="glyphicon glyphicon-film"></span>
+                                </button>
+                                <button id="tracks-delete" class="btn btn-primary btn-danger" role="button" title="delete all recorded tracks" disabled="disabled">
+                                <span class="glyphicon glyphicon-trash"></span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
+            
+
+            <!-- SYNC CONTROLS -->
+            <!--
             <hr/>
-            <!-- CONTROLS & FILES -->
-            <div class="row">
-                <!-- LEFT PLAYER FILES -->
-                <div class="col-md-4">
-                    <!-- VIDEO -->
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="row text-center">
-                                <div class="col-md-4">
-                                    <button class="btn btn-default" role="button" data-id="video-1" title="choose a source for player 1" data-toggle="modal" data-target="#file-dialog">
-                                    <span class="glyphicon glyphicon-film"></span> video source
-                                    </button>
-                                </div>
-                            </div>
-                            <!-- filename -->
+            <div class="row top15">
+                <div class="col-md-12 text-center">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Sync controls</h3>
+                            <h5><i>Use these controls to play / pause player 1 <strong>AND</strong> player 2 sound and video in the same time</i></h5>
                         </div>
-                    </div>
-                </div>
-                <!-- PLAYERS SYNCHRONIZED CONTROLS -->
-                <div class="col-md-4">
-                    <button id="tracks-play" class="btn btn-primary btn-default" role="button" disabled="disabled">
-                    <span class="glyphicon glyphicon-play"></span> Play
-                    </button>
-                    <button id="tracks-pause" class="btn btn-default" role="button" disabled="disabled">
-                    <span class="glyphicon glyphicon-pause"></span> Pause
-                    </button>
-                    <button id="tracks-stop" class="btn btn-default" role="button" disabled="disabled">
-                    <span class="glyphicon glyphicon-stop"></span> Stop
-                    </button>
-                    <br/><br/>
-                    <!-- DELETE ALL -->
-                    <div class="row">
-                        <div class="col-md-12 col-md-offset-1">
-                            <button id="tracks-delete" class="btn btn-sm btn-danger" role="button" disabled="disabled">
-                            <span class="glyphicon glyphicon-trash"></span> Delete recorded tracks
+                        <div class="panel-body text-center">
+                            <button id="tracks-play" class="btn btn-primary btn-default" role="button" disabled="disabled">
+                            <span class="glyphicon glyphicon-play"></span> Play
+                            </button>
+                            <button id="tracks-pause" class="btn btn-default" role="button" disabled="disabled">
+                            <span class="glyphicon glyphicon-pause"></span> Pause
+                            </button>
+                            <button id="tracks-stop" class="btn btn-default" role="button" disabled="disabled">
+                            <span class="glyphicon glyphicon-stop"></span> Stop
                             </button>
                         </div>
                     </div>
                 </div>
-                <!-- RIGHT PLAYER FILES -->
-                <div class="col-md-4">
-                    <!-- VIDEO -->
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <button class="btn btn-default" role="button" data-id="video-2" title="choose a source for player 2" data-toggle="modal" data-target="#file-dialog">
-                                    <span class="glyphicon glyphicon-film"></span> video source
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
+            -->
             <!-- VIDEO MODAL FILE DIALOG -->
             <div class="modal fade" id="file-dialog" tabindex="-1" role="dialog" aria-hidden="true">
                 <div class="modal-dialog">
@@ -207,108 +246,6 @@
                                             <div class="tab-pane" id="ltrack">
                                                 <h4>Choose a file from your machine</h4>
                                                 <input type="file" id="open-file" accept="video/*" name="file" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- AUDIO MODAL FILE DIALOG -->
-            <div class="modal fade" id="audio-file-dialog" tabindex="-1" role="dialog" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                            <h4 class="modal-title" id="help-modal-label">PICK UP AN AUDIO SOURCE</h4>
-                        </div>
-                        <div class="modal-body">
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <div class="row file-type-chooser">
-                                        <div class="col-md-6">
-                                            <div class="btn-group">
-                                                <button type="button" id="btn-title" class="btn btn-default">I want to open a file from</button>
-                                                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-                                                <span class="caret"></span>
-                                                <span class="sr-only"></span>
-                                                </button>
-                                                <ul class="dropdown-menu" role="menu">
-                                                    <li><a data-id="my-tracks" href="#my-tracks">My recorded tracks</a></li>
-                                                    <li><a data-id="teacher-tracks" href="#teacher-tracks">Teacher models</a></li>
-                                                    <li><a data-id="local-track" href="#local-track">From my machine</a></li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <h5 class="selected-title"></h5>
-                                        </div>
-                                    </div>
-                                    <!-- STUDENT TRACKS -->
-                                    <div class="row modal-item" id="my-tracks" style="display: none;">
-                                        <div class="col-md-12">
-                                            <!-- STUDENT TRACKS -->
-                                            <div id="strack-audio-list" class="tab-pane active" style="border-top-left-radius: 0;">
-                                                <table class="audio-tracks-table table table-striped">
-                                                    <thead>
-                                                        <tr>
-                                                            <th class="text-center col-md-1"> </th>
-                                                            <th class="col-md-1">Type</th>
-                                                            <th class="col-md-3">Track</th>
-                                                            <th class="col-md-1"></th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        <tr class="no-track">
-                                                            <td colspan="6" class="text-center"><em>You have no recorded track.</em></td>
-                                                        </tr>
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <!-- TEACHER TRACKS -->
-                                    <div class="row modal-item" id="teacher-tracks" style="display: none;">
-                                        <div class="col-md-12">
-                                            <div id="ttrack-audio-list" class="panel-default" style="border-top-left-radius: 0;">
-                                                <table class="audio-tracks-table table table-striped">
-                                                    <thead>
-                                                        <tr>
-                                                            <th class="text-center col-md-1"></th>
-                                                            <th class="col-md-1">Type</th>
-                                                            <th class="col-md-3">Track</th>
-                                                            <th class="col-md-1"></th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        <tr class="no-track">
-                                                            <td colspan="6" class="text-center"><em>You have no recorded track.</em></td>
-                                                        </tr>
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <!-- WEB TRACK -->
-                                    <div class="row modal-item" id="web-track" style="display: none;">
-                                        <div class="col-md-12">
-                                            <div class="tab-pane" id="wtrack">
-                                                <h4>Choose a file from the web by entering an url in the text box</h4>
-                                                <input type="text" id="open-web-video" placeholder="Enter an url" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <!-- COMPUTER TRACK -->
-                                    <div class="row modal-item" id="local-track" style="display: none;">
-                                        <div class="col-md-12">
-                                            <div class="tab-pane" id="ltrack">
-                                                <h4>Choose a file from your machine</h4>
-                                                <input type="file" id="open-file" accept="audio/*" name="file" />
                                             </div>
                                         </div>
                                     </div>

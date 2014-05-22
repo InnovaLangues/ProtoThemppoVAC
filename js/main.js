@@ -97,7 +97,7 @@ $(document).ready(function() {
                     videoSrc = $('#open-web-video').val();
                     // create a new youtube video element :
                     var html = '';
-                    html += '<video id="' + fileButtonCaller + '" controls="controls" preload="none"  width="480" height="270">';
+                    html += '<video id="' + fileButtonCaller + '" controls="controls" preload="none"  width="100%" height="270">';
                     html += '   <source src="' + videoSrc + '" type="video/youtube" ></source>';
                     html += '</video>';
                     // happend html depending on player called
@@ -122,7 +122,7 @@ $(document).ready(function() {
                 // from teacher tracks or student tracks
                 if ('web-track' !== mediaSource && 'local-track' !== mediaSource && hasFile) {
                     var html = '';
-                    html += '<video id="' + fileButtonCaller + '"  src="' + videoSrc + '" controls="controls" width="480" height="270">';
+                    html += '<video id="' + fileButtonCaller + '"  src="' + videoSrc + '" controls="controls" width="100%" height="270">';
                     //html += '   <source src="' + videoSrc + '" type="'+mime+'" ></source>';
                     html += '</video>';
                     if ('video-1' === fileButtonCaller) {
@@ -167,7 +167,7 @@ $(document).ready(function() {
     $('body').on('click', '#tracks-delete', this, function(el) {
         bootbox.confirm('<h4>Are you <span style="color:red;font-weight:bold;">sure</span> you want to delete <span style="color:red;font-weight:bold;">all</span> your recorded tracks?</h4>', function(result) {
             if (result) {
-                var html = '<img width="480" class="no-video-img" height="270" alt="no image" title="PLease select a video" src="media/poster/poster.jpg"/>';
+                var html = '<img width="100%" class="no-video-img" height="270" alt="no image" title="PLease select a video" src="media/poster/poster.jpg"/>';
                 TrackManager.deleteAllTracks();
                 $("#video-1-container").children().remove();
                 $("#video-2-container").children().remove();
@@ -185,7 +185,7 @@ $(document).ready(function() {
         var video1Src = $('#video-1').attr('src');
         var video2Src = $('#video-2').attr('src');
         if (video2Src !== undefined || video1Src !== undefined) {
-            var html = '<img width="480" class="no-video-img" height="270" alt="no image" title="PLease select a video" src="media/poster/poster.jpg"/>';
+            var html = '<img width="100%" class="no-video-img" height="270" alt="no image" title="PLease select a video" src="media/poster/poster.jpg"/>';
             var arr;
             var file;
             // check if the file we want to delete is used by player 1
@@ -228,7 +228,7 @@ $(document).ready(function() {
             video: true
         }, function(stream) {
             var html = '';
-            html += '<video id="video-2" controls="controls" preload="none"  width="480" height="270">';
+            html += '<video id="video-2" controls="controls" preload="none"  width="100%" height="270">';
             html += '   <source src="' + window.URL.createObjectURL(stream) + '" type="video/webm" ></source>';
             html += '</video>';
             $("#video-2-container").children().remove();
@@ -286,7 +286,7 @@ function handleFileSelect(evt) {
             return function(e) {
                 if (e.target.result) {
                     var html = '';
-                    html += '<video id="' + fileButtonCaller + '" controls="controls" preload="none"  width="480" height="270">';
+                    html += '<video id="' + fileButtonCaller + '" controls="controls" preload="none"  width="100%" height="270">';
                     html += '   <source src="' + e.target.result + '" type="' + theFile.type + '" ></source>';
                     html += '</video>';
                     if ('video-1' === fileButtonCaller) {
@@ -345,7 +345,7 @@ function xhr(url, data, progress, callback) {
             TrackManager.addTrack(track);
             if ('video' === track.type) {
                 var html = '';
-                html += '<video id="video-2" controls="controls"  width="480" height="270">';
+                html += '<video id="video-2" controls="controls"  width="100%" height="270">';
                 html += '   <source src="' + track.url + '" type="video/webm" ></source>';
                 html += '</video>';
                 $("#video-2-container").children().remove();
