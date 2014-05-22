@@ -63,7 +63,8 @@
                     <div class="panel panel-default top5">
                         <div class="panel-heading" style="text-align:center;">
                             <h3 class="panel-title">Sync controls</h3>
-                            <h5><i>Use these controls to play / pause player 1 <strong>AND</strong> player 2 sound and video in the same time</i></h5>
+                            <button class="btn btn-default glyphicon glyphicon-question-sign" data-toggle="modal" data-target="#sync-help" title="What is that ?">                     
+                            </button>
                         </div>
                         <div class="panel-body text-center">
                             <button id="tracks-play" class="btn btn-primary btn-default" role="button" disabled="disabled">
@@ -115,10 +116,12 @@
                 <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h4 class="modal-title" id="help-modal-label">Please enter your name</h4>
-                            <i>If you want to retrieve your old recorded files please remember the name you used...</i>
+                             <h4 class="modal-title" id="help-modal-label">Please enter your name...</h4>
                         </div>
                         <div class="modal-body">
+                            <p>                               
+                                <strong>If you want to retrieve your old recorded files please remember the name you used!</strong>
+                            </p>
                             <table class="table">
                             <tbody>
                                 <tr>
@@ -252,6 +255,28 @@
                         <div class="modal-footer">
                             <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
                             <button type="button" class="btn btn-danger" id="confirm">Continue</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal fade" id="sync-help" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                            <h4 class="modal-title">Sync controls - help</h4>
+                        </div>
+                        <div class="modal-body">
+                            <p>
+                                These buttons are used to [play / pause / stop] simultaneously the sound and video of  <strong>both</strong> players...
+                            </p>
+                            <p>
+                                These buttons are active only if <strong>both</strong> players have a source !
+                            </p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                         </div>
                     </div>
                 </div>
