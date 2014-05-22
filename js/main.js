@@ -67,8 +67,9 @@ $(document).ready(function() {
     });
     $('#authentication-dialog').on('hidden.bs.modal', function(e) {
         // init app
-        userId = $('#user').val();
-        $('#user-name').html('<span class="glyphicon glyphicon-user"></span> ' + userId);    
+        userId = $('#user').val().replace(' ', '').replace(/[^a-zA-Z0-9]/g,'_');
+        console.log(userId);
+        $('#user-name').html('<span class="glyphicon glyphicon-user"></span> ' + $('#user').val());    
         init();
     });
 });
