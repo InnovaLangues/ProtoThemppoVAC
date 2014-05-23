@@ -18,7 +18,7 @@ var TrackManager = {
     /**
      * Initialize the track manager (register events)
      */
-    initialize: function(uid) {
+    initialize: function(userFolder) {
         // Store buttons
         this.buttonPlay = $('#tracks-play');
         this.buttonPause = $('#tracks-pause');
@@ -29,7 +29,7 @@ var TrackManager = {
         // model tracks container
         this.t_container = $('#ttracks-container tbody');
         // Load tracks
-        this.loadTracks(uid);
+        this.loadTracks(userFolder);
         // Play selected tracks
         $('body').on('click', '#tracks-play', this, function(el) {
             el.data.play();

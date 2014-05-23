@@ -66,10 +66,11 @@ $(document).ready(function() {
         });
     });
     $('#authentication-dialog').on('hidden.bs.modal', function(e) {
-        // init app
+        // sanitize user_id (for folder creation)
         userId = $('#user').val().replace(' ', '').replace(/[^a-zA-Z0-9]/g,'_');
-        console.log(userId);
-        $('#user-name').html('<span class="glyphicon glyphicon-user"></span> ' + $('#user').val());    
+        // for display let the user friendly name
+        $('#user-name').html('<span class="glyphicon glyphicon-user"></span> ' + $('#user').val());   
+        // init app and bind events
         init();
     });
 });

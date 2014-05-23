@@ -754,7 +754,7 @@ function enlargeMemory() {
 }
 
 var TOTAL_STACK = Module['TOTAL_STACK'] || 5242880;
-var TOTAL_MEMORY = Module['TOTAL_MEMORY'] || 16777216;
+var TOTAL_MEMORY = Module['TOTAL_MEMORY'] || 996777216;//16777216;
 var FAST_MEMORY = Module['FAST_MEMORY'] || 2097152;
 
 // Initialize the runtime's memory
