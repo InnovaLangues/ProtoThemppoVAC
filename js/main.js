@@ -131,7 +131,7 @@ function init() {
                     videoSrc = $('#open-web-video').val();
                     // create a new youtube video element :
                     var html = '';
-                    html += '<video id="' + fileButtonCaller + '" controls="controls" preload="true" width="100%" height="270">';
+                    html += '<video id="' + fileButtonCaller + '" controls="controls" preload="none" width="100%" height="270">';
                     html += '   <source src="' + videoSrc + '" type="video/youtube" ></source>';
                     html += '</video>';
                     // happend html depending on player called
@@ -156,7 +156,13 @@ function init() {
                 // from teacher tracks or student tracks
                 if ('web-track' !== mediaSource && 'local-track' !== mediaSource && hasFile) {
                     var html = '';
-                    html += '<video id="' + fileButtonCaller + '"  src="' + videoSrc + '" preload="true" controls="controls" width="100%" height="270">';
+                    // Kind of Chrome Hack... Chrome is not able to play at the same time the same source : http://stackoverflow.com/questions/19375877/chrome-not-play-html5-video-on-duplicated-tags
+                    if ('video-1' === fileButtonCaller) {
+                        videoSrc += '?1';
+                    } else if ('video-2' === fileButtonCaller) {
+                        videoSrc += '?2';
+                    }
+                    html += '<video id="' + fileButtonCaller + '"  src="' + videoSrc + '" preload="none" controls="controls" width="100%" height="270">';
                     //html += '   <source src="' + videoSrc + '" type="'+mime+'" ></source>';
                     html += '</video>';
                     if ('video-1' === fileButtonCaller) {
@@ -263,7 +269,7 @@ function init() {
             video: true
         }, function(stream) {
             var html = '';
-            html += '<video id="video-2" controls="controls" preload="true" width="100%" height="270">';
+            html += '<video id="video-2" controls="controls" preload="none" width="100%" height="270">';
             html += '   <source src="' + window.URL.createObjectURL(stream) + '" type="video/webm" ></source>';
             html += '</video>';
             $("#video-2-container").children().remove();
@@ -321,7 +327,7 @@ function handleFileSelect(evt) {
             return function(e) {
                 if (e.target.result) {
                     var html = '';
-                    html += '<video id="' + fileButtonCaller + '" controls="controls" preload="true"  width="100%" height="270">';
+                    html += '<video id="' + fileButtonCaller + '" controls="controls" preload="none"  width="100%" height="270">';
                     html += '   <source src="' + e.target.result + '" type="' + theFile.type + '" ></source>';
                     html += '</video>';
                     if ('video-1' === fileButtonCaller) {
@@ -390,8 +396,8 @@ function xhr(url, data, progress, callback) {
             TrackManager.addTrack(track);
             if ('video' === track.type) {
                 var html = '';
-                html += '<video id="video-2" controls="controls" preload="true" width="100%" height="270">';
-                html += '   <source src="' + track.url + '" type="video/webm" ></source>';
+                html += '<video id="video-2" controls="controls" preload="none" width="100%" height="270">';
+                html += '   <source src="' + track.url + '?2" type="video/webm" ></source>';
                 html += '</video>';
                 $("#video-2-container").children().remove();
                 $("#video-2-container").append(html);
@@ -453,7 +459,11 @@ function initPlayer1() {
         pauseOtherPlayers: false,
         features: ['playpause', 'progress', 'current', 'duration', 'tracks', 'volume'],
         success: function(mediaElement, domObject) {
-            // listen to event in order to sync audio and video (if necessary)           
+            // listen to event in order to sync audio and video (if necessary)  
+            mediaElement.addEventListener('loadeddata', function(e) {
+                console.log('player 1 loaded');
+                //if (sound1) sound1.currentTime = e.target.currentTime;
+            }, false);             
             mediaElement.addEventListener('seeked', function(e) {
                 if (sound1) sound1.currentTime = e.target.currentTime;
             }, false);
@@ -491,7 +501,12 @@ function initPlayer2() {
         pauseOtherPlayers: false,
         features: ['playpause', 'progress', 'current', 'duration', 'tracks', 'volume'],
         success: function(mediaElement, domObject) {
-            // listen to event in order to sync audio and video (if necessary)           
+            console.log('player 2 success');
+            // listen to event in order to sync audio and video (if necessary) 
+            mediaElement.addEventListener('loadeddata', function(e) {
+                console.log('player 2 loaded');
+                //if (sound1) sound1.currentTime = e.target.currentTime;
+            }, false);             
             mediaElement.addEventListener('seeked', function(e) {
                 if (sound2) sound2.currentTime = e.target.currentTime;
             }, false);
