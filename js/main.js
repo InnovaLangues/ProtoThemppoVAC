@@ -131,7 +131,7 @@ function init() {
                     videoSrc = $('#open-web-video').val();
                     // create a new youtube video element :
                     var html = '';
-                    html += '<video id="' + fileButtonCaller + '" controls="controls" preload="none"  width="100%" height="270">';
+                    html += '<video id="' + fileButtonCaller + '" controls="controls" preload="true" width="100%" height="270">';
                     html += '   <source src="' + videoSrc + '" type="video/youtube" ></source>';
                     html += '</video>';
                     // happend html depending on player called
@@ -156,7 +156,7 @@ function init() {
                 // from teacher tracks or student tracks
                 if ('web-track' !== mediaSource && 'local-track' !== mediaSource && hasFile) {
                     var html = '';
-                    html += '<video id="' + fileButtonCaller + '"  src="' + videoSrc + '" controls="controls" width="100%" height="270">';
+                    html += '<video id="' + fileButtonCaller + '"  src="' + videoSrc + '" preload="true" controls="controls" width="100%" height="270">';
                     //html += '   <source src="' + videoSrc + '" type="'+mime+'" ></source>';
                     html += '</video>';
                     if ('video-1' === fileButtonCaller) {
@@ -263,7 +263,7 @@ function init() {
             video: true
         }, function(stream) {
             var html = '';
-            html += '<video id="video-2" controls="controls" preload="none"  width="100%" height="270">';
+            html += '<video id="video-2" controls="controls" preload="true" width="100%" height="270">';
             html += '   <source src="' + window.URL.createObjectURL(stream) + '" type="video/webm" ></source>';
             html += '</video>';
             $("#video-2-container").children().remove();
@@ -321,7 +321,7 @@ function handleFileSelect(evt) {
             return function(e) {
                 if (e.target.result) {
                     var html = '';
-                    html += '<video id="' + fileButtonCaller + '" controls="controls" preload="none"  width="100%" height="270">';
+                    html += '<video id="' + fileButtonCaller + '" controls="controls" preload="true"  width="100%" height="270">';
                     html += '   <source src="' + e.target.result + '" type="' + theFile.type + '" ></source>';
                     html += '</video>';
                     if ('video-1' === fileButtonCaller) {
@@ -390,7 +390,7 @@ function xhr(url, data, progress, callback) {
             TrackManager.addTrack(track);
             if ('video' === track.type) {
                 var html = '';
-                html += '<video id="video-2" controls="controls"  width="100%" height="270">';
+                html += '<video id="video-2" controls="controls" preload="true" width="100%" height="270">';
                 html += '   <source src="' + track.url + '" type="video/webm" ></source>';
                 html += '</video>';
                 $("#video-2-container").children().remove();
