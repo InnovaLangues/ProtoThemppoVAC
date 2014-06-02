@@ -66,14 +66,14 @@ var TrackManager = {
             // name
             html += '    <td>' + track.name + '</td>';
             html += '    <td>';
-            if (track.downloadable) {
+            /*if (track.downloadable) {
                 // Download button
-                var file = track.uid + '/' + track.name + '.' + track.extension; //('audio' === track.type ? '.wav' : '.webm');
-                html += '   <a href="download.php?file=' + file + '" target="_blank" class="track-download btn btn-sm btn-default" role="button">';
+                //var file = track.uid + '/' + track.name + '.' + track.extension; //('audio' === track.type ? '.wav' : '.webm');
+                html += '   <a href="download.php?file=' + track.url + '" target="_blank" class="track-download btn btn-sm btn-default" role="button">';
                 html += '       <span class="glyphicon glyphicon-download-alt"></span>';
                 html += '       <span class="sr-only">Download</span>';
                 html += '   </a>';
-            }
+            }*/
             if (track.deletable) {
                 // Delete button
                 html += '   <button class="track-delete btn btn-sm btn-danger" role="button">';

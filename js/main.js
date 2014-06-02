@@ -119,6 +119,10 @@ function init() {
             var mime = '';
             var hasFile = false;
             if (mediaSource) {
+                // stop sound playback :
+                if (sound1 && 'video-1' === fileButtonCaller) sound1.pause();
+                if (sound2 && 'video-2' === fileButtonCaller) sound2.pause();
+                // open my track or teacher track
                 if ($('.track-select:checked')[0] && ('teacher-tracks' === mediaSource || 'my-tracks' === mediaSource)) {
                     var name = $('.track-select:checked').parents('tr').prop('id');
                     var track = TrackManager.getTrack(name);
@@ -127,7 +131,9 @@ function init() {
                     // replace video par audio dans name
                     audioSrc = track.url.replace("video", "audio").replace(track.extension, "mp3");
                     hasFile = true;
-                } else if ('web-track' === mediaSource && $('#open-web-video').val()) {
+                }
+                // open web track (youtube)
+                else if ('web-track' === mediaSource && $('#open-web-video').val()) {
                     videoSrc = $('#open-web-video').val();
                     // create a new youtube video element :
                     var html = '';
@@ -143,11 +149,13 @@ function init() {
                         $("#video-2-container").children().remove();
                         $("#video-2-container").append(html);
                         initPlayer2();
-                    }
+                    }                    
                     sound1 = null;
                     sound2 = null;
                     TrackManager.togglePlayerButtons();
-                } else if ('local-track' === mediaSource) {
+                }
+                // other computer track 
+                else if ('local-track' === mediaSource) {
                     sound1 = null;
                     sound2 = null;
                     TrackManager.togglePlayerButtons();
@@ -159,8 +167,10 @@ function init() {
                     // Kind of Chrome Hack... Chrome is not able to play at the same time the same source : http://stackoverflow.com/questions/19375877/chrome-not-play-html5-video-on-duplicated-tags
                     if ('video-1' === fileButtonCaller) {
                         videoSrc += '?1';
+                        audioSrc += '?1';
                     } else if ('video-2' === fileButtonCaller) {
                         videoSrc += '?2';
+                        audioSrc += '?2';
                     }
                     html += '<video id="' + fileButtonCaller + '"  src="' + videoSrc + '" preload="none" controls="controls" width="100%" height="270">';
                     //html += '   <source src="' + videoSrc + '" type="'+mime+'" ></source>';
@@ -461,8 +471,8 @@ function initPlayer1() {
         success: function(mediaElement, domObject) {
             // listen to event in order to sync audio and video (if necessary)  
             mediaElement.addEventListener('loadeddata', function(e) {
-                console.log('player 1 loaded');
-                //if (sound1) sound1.currentTime = e.target.currentTime;
+                //console.log('player 1 loaded');
+                if (sound1) sound1.currentTime = e.target.currentTime;
             }, false);             
             mediaElement.addEventListener('seeked', function(e) {
                 if (sound1) sound1.currentTime = e.target.currentTime;
@@ -501,11 +511,11 @@ function initPlayer2() {
         pauseOtherPlayers: false,
         features: ['playpause', 'progress', 'current', 'duration', 'tracks', 'volume'],
         success: function(mediaElement, domObject) {
-            console.log('player 2 success');
+            //console.log('player 2 success');
             // listen to event in order to sync audio and video (if necessary) 
             mediaElement.addEventListener('loadeddata', function(e) {
-                console.log('player 2 loaded');
-                //if (sound1) sound1.currentTime = e.target.currentTime;
+                //console.log('player 2 loaded');
+                if (sound2) sound2.currentTime = e.target.currentTime;
             }, false);             
             mediaElement.addEventListener('seeked', function(e) {
                 if (sound2) sound2.currentTime = e.target.currentTime;
