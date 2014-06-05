@@ -27,7 +27,7 @@ var videoFile = !! navigator.mozGetUserMedia ? 'video.gif' : 'video.webm';
 // audioRecorder is used for mp3 export and audio signal visualisation (spectrum analyser)
 var recordAudio, recordVideo, audioRecorder;
 // SPECTRUM ANALYSER
-var audioContext = new AudioContext();
+var audioContext;// = isFirefox ? window.mozAudioContext : new AudioContext();
 var audioInput = null,
     realAudioInput = null,
     inputPoint = null;
@@ -45,6 +45,17 @@ var videoUploaded = false;
 
 // ON READY
 $(document).ready(function() {
+    //window.AudioContext = (window.AudioContext || window.webkitAudioContext || window.mozAudioContext);
+    
+    navigator.getUserMedia = (navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
+    //audioContext = new AudioContext();
+
+    audioContext = window.AudioContext ? new window.AudioContext() :
+               window.webkitAudioContext ? new window.webkitAudioContext() :
+               window.mozAudioContext ? new window.mozAudioContext() :
+               window.oAudioContext ? new window.oAudioContext() :
+               window.msAudioContext ? new window.msAudioContext() :
+               undefined;
 
     // open authentication modal
     var options = {
