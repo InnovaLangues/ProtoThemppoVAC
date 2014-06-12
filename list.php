@@ -2,8 +2,8 @@
 
 // student tracks
 if (isset($_POST["uid"])) {
-    $uid = trim($_POST["uid"]);
 
+    $uid = trim($_POST["uid"]);
     
     $path = 's_uploads/' . $uid . '/';
     $tracks = array();

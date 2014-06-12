@@ -11,52 +11,36 @@ var player1Container = null;
 // html video element 2
 var player2 = null;
 var player2Container = null;
-// sound that will be associated with video 1
-var sound1 = null;
-// sound that will be associated with video 2
-var sound2 = null;
 // stop recording button
 var stop;
 // start recording button
 var record;
-// web browser
-var isFirefox = !! navigator.mozGetUserMedia;
-var videoFile = !! navigator.mozGetUserMedia ? 'video.gif' : 'video.webm';
-// recordAudio and recordVideo are used for client side VIDEO + AUDIO merge
-// recordVideo is used only for video
-// audioRecorder is used for mp3 export and audio signal visualisation (spectrum analyser)
-var recordAudio, recordVideo, audioRecorder;
-// SPECTRUM ANALYSER
-var audioContext;// = isFirefox ? window.mozAudioContext : new AudioContext();
+var recorder; // video && audio recorder
+// MIC LEVEL ANALYSER
+var audioContext;
+// we have to do that before webrtc.js is loaded in order to avoid conflicts
+if (window.AudioContext || window.webkitAudioContext) {
+    if (window.webkitAudioContext) {
+        audioContext = new window.webkitAudioContext();
+    } else {
+        audioContext = new window.AudioContext();
+    }
+} else {
+    console.log('no audio context');
+}
 var audioInput = null,
     realAudioInput = null,
     inputPoint = null;
 var rafID = null;
 var analyserContext = null;
 var canvasWidth, canvasHeight;
+var gradient;
 // file name to save / upload
 var fileName;
-// file opener
-// caller (video-1, video-2, audio-1, audio-2)
+// file opener caller (video-1, video-2)
 var fileButtonCaller;
-// 
-var audioUploaded = false;
-var videoUploaded = false;
-
-// ON READY
+// ON DOCUMENT READY
 $(document).ready(function() {
-    //window.AudioContext = (window.AudioContext || window.webkitAudioContext || window.mozAudioContext);
-    
-    navigator.getUserMedia = (navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
-    //audioContext = new AudioContext();
-
-    audioContext = window.AudioContext ? new window.AudioContext() :
-               window.webkitAudioContext ? new window.webkitAudioContext() :
-               window.mozAudioContext ? new window.mozAudioContext() :
-               window.oAudioContext ? new window.oAudioContext() :
-               window.msAudioContext ? new window.msAudioContext() :
-               undefined;
-
     // open authentication modal
     var options = {
         "backdrop": "static",
@@ -66,36 +50,40 @@ $(document).ready(function() {
     $('#authentication-dialog').modal(options);
     $('#authentication-dialog').on('shown.bs.modal', function(e) {
         $('#usr-ok').prop('disabled', true);
-        // control text-input
-        $('#user').on('input', function(){
-            if($(this).val() !== ''){
-                $('#usr-ok').prop('disabled', false);
-            }
-            else{
-                $('#usr-ok').prop('disabled', true);
-            }
-        });
+        // firefox keep the login used in the textbox
+        if ($('#user').val() !== '') {
+            $('#usr-ok').prop('disabled', false);
+        } else {
+            // control text-input
+            $('#user').on('input', function() {
+                if ($(this).val() !== '') {
+                    $('#usr-ok').prop('disabled', false);
+                } else {
+                    $('#usr-ok').prop('disabled', true);
+                }
+            });
+        }
     });
     $('#authentication-dialog').on('hidden.bs.modal', function(e) {
         // sanitize user_id (for folder creation)
-        userId = $('#user').val().replace(' ', '').replace(/[^a-zA-Z0-9]/g,'_');
+        userId = $('#user').val().replace(' ', '').replace(/[^a-zA-Z0-9]/g, '_');
         // for display let the user friendly name
-        $('#user-name').html('<span class="glyphicon glyphicon-user"></span> ' + $('#user').val());   
+        $('#user-name').html('<span class="glyphicon glyphicon-user"></span> ' + $('#user').val());
         // init app and bind events
         init();
     });
 });
-
 // INIT APP & BIND EVENTS
 function init() {
     TrackManager.initialize(userId);
+    // stop recording button
     stop = document.getElementById('record-stop');
-    // start recording
+    stop.disabled = true;
+    // start recording button
     record = document.getElementById('record-start');
+    record.disabled = false;
     player1Container = $("#video-1-container");
     player2Container = $("#video-2-container");
-    record.disabled = false;
-    stop.disabled = true;
     // handle file source button click event 
     $('button[data-toggle=modal]').click(function() {
         if (typeof $(this).data('id') !== 'undefined') {
@@ -120,27 +108,27 @@ function init() {
                     }
                 });
             }
+            /*RecordRTC.getFromDisk('all', function(dataURL, type) {
+                console.log(dataURL + ' | ' + type);
+            });*/
         }
     });
     // handle modal file chooser closing event
     $('#file-dialog').on('hidden.bs.modal', function(e) {
+        // disable download 'just recorded file' button       
+        // $('#download').prop('disabled', true);
         if (fileButtonCaller && fileButtonCaller !== 'undefined') {
             var videoSrc = '';
-            var audioSrc = '';
+            //var audioSrc = '';
             var mime = '';
             var hasFile = false;
             if (mediaSource) {
-                // stop sound playback :
-                if (sound1 && 'video-1' === fileButtonCaller) sound1.pause();
-                if (sound2 && 'video-2' === fileButtonCaller) sound2.pause();
                 // open my track or teacher track
                 if ($('.track-select:checked')[0] && ('teacher-tracks' === mediaSource || 'my-tracks' === mediaSource)) {
                     var name = $('.track-select:checked').parents('tr').prop('id');
                     var track = TrackManager.getTrack(name);
                     mime = track.extension === 'mp4' ? 'video/mp4' : 'video/webm';
                     videoSrc = track.url;
-                    // replace video par audio dans name
-                    audioSrc = track.url.replace("video", "audio").replace(track.extension, "mp3");
                     hasFile = true;
                 }
                 // open web track (youtube)
@@ -160,15 +148,13 @@ function init() {
                         $("#video-2-container").children().remove();
                         $("#video-2-container").append(html);
                         initPlayer2();
-                    }                    
-                    sound1 = null;
-                    sound2 = null;
+                    }
                     TrackManager.togglePlayerButtons();
                 }
                 // other computer track 
                 else if ('local-track' === mediaSource) {
-                    sound1 = null;
-                    sound2 = null;
+                    //sound1 = null;
+                    //sound2 = null;
                     TrackManager.togglePlayerButtons();
                     // everything else is done by handleFileSelect() method
                 }
@@ -176,27 +162,24 @@ function init() {
                 if ('web-track' !== mediaSource && 'local-track' !== mediaSource && hasFile) {
                     var html = '';
                     // Kind of Chrome Hack... Chrome is not able to play at the same time the same source : http://stackoverflow.com/questions/19375877/chrome-not-play-html5-video-on-duplicated-tags
-                    if ('video-1' === fileButtonCaller) {
+                    /*if ('video-1' === fileButtonCaller) {
                         videoSrc += '?1';
                         audioSrc += '?1';
                     } else if ('video-2' === fileButtonCaller) {
                         videoSrc += '?2';
                         audioSrc += '?2';
-                    }
+                    }*/
                     html += '<video id="' + fileButtonCaller + '"  src="' + videoSrc + '" preload="none" controls="controls" width="100%" height="270">';
                     //html += '   <source src="' + videoSrc + '" type="'+mime+'" ></source>';
                     html += '</video>';
                     if ('video-1' === fileButtonCaller) {
                         $("#video-1-container").children().remove();
                         $("#video-1-container").append(html);
-                        sound1 = new Audio(audioSrc);
                         initPlayer1();
                         TrackManager.togglePlayerButtons();
                     } else if ('video-2' === fileButtonCaller) {
-                        //player2.setSrc(videoSrc);
                         $("#video-2-container").children().remove();
                         $("#video-2-container").append(html);
-                        sound2 = new Audio(audioSrc);
                         initPlayer2();
                         TrackManager.togglePlayerButtons();
                     }
@@ -225,19 +208,21 @@ function init() {
         $('h5.selected-title').text($(this).text());
     });
     // delete all recorded tracks show confirm
-    $('body').on('click', '#tracks-delete', this, function(el) {        
-        $('#del-all-confirm-dialog').modal('show');        
+    $('body').on('click', '#tracks-delete', this, function(el) {
+        $('#del-all-confirm-dialog').modal('show');
+    });
+    // download the just recorded file (blob)
+    $('body').on('click', '#download', this, function(el) {
+        recorder.save();
     });
     // delete all recorded tracks confirm OK
-    $('#del-all-confirm-dialog').find('.modal-footer #confirm').on('click', function(){
+    $('#del-all-confirm-dialog').find('.modal-footer #confirm').on('click', function() {
         var html = '<img width="100%" class="no-video-img" height="270" alt="no image" title="PLease select a video" src="media/poster/poster.jpg"/>';
         TrackManager.deleteAllTracks();
         $("#video-1-container").children().remove();
         $("#video-2-container").children().remove();
         $("#video-1-container").append(html);
         $("#video-2-container").append(html);
-        sound1 = null;
-        sound2 = null;
         $('#del-all-confirm-dialog').modal('hide');
     });
     // delete one track (modal window button)
@@ -257,7 +242,7 @@ function init() {
                 if (file === trackToRemove + '.webm') {
                     $("#video-1-container").children().remove();
                     $("#video-1-container").append(html);
-                    sound1 = null;
+                    //sound1 = null;
                     TrackManager.deletePlaying('video-1');
                 }
             }
@@ -268,15 +253,13 @@ function init() {
                 if (file === trackToRemove + '.webm') {
                     $("#video-2-container").children().remove();
                     $("#video-2-container").append(html);
-                    sound2 = null;
+                    //sound2 = null;
                     TrackManager.deletePlaying('video-2');
                 }
             }
         }
         // delete video track
         TrackManager.deleteTrack(trackToRemove);
-        // delete associated mp3 track
-        TrackManager.deleteTrack(trackToRemove, true);
         TrackManager.togglePlayerButtons();
     });
     // handle start recording event
@@ -285,40 +268,11 @@ function init() {
         stop.disabled = false;
         audioUploaded = false;
         videoUploaded = false;
-        navigator.getUserMedia({
-            audio: true,
-            video: true
-        }, function(stream) {
-            var html = '';
-            html += '<video id="video-2" controls="controls" preload="none" width="100%" height="270">';
-            html += '   <source src="' + window.URL.createObjectURL(stream) + '" type="video/webm" ></source>';
-            html += '</video>';
-            $("#video-2-container").children().remove();
-            $("#video-2-container").append(html);
-            initPlayer2();
-            player2.play();
-            player2.setMuted(true);
-            // spectrum analyzer and Recorder instanciation (for mp3 export)
-            gotStream(stream);
-            if (stream.getAudioTracks().length === 0 && stream.getVideoTracks().length === 0) {
-                alert('you have no webcam nore mic available on your device');
-            } else {
-                if (stream.getAudioTracks().length > 0) {
-                    audioRecorder.clear();
-                    audioRecorder.record();
-                }
-                if (stream.getVideoTracks().length > 0) {
-                    if (!isFirefox) {
-                        recordVideo = RecordRTC(stream, {
-                            type: 'video'
-                        });
-                        recordVideo.startRecording();
-                    }
-                }
-                stop.disabled = false;
-            }
-        }, function(error) {
-            alert('no webcam nore mic found on youre device!');
+        captureUserMedia(function(stream) {
+            recorder = RecordRTC(stream, {
+                //autoWriteToDisk: true
+            });
+            recorder.startRecording();
         });
     };
     // handle stop recording event
@@ -326,18 +280,50 @@ function init() {
         record.disabled = false;
         stop.disabled = true;
         player2.setSrc('');
+        //player2.src = '';
         fileName = generateFileName();
-        showWaitModal();
-        if (audioRecorder) {
-            audioRecorder.stop();
-            audioRecorder.exportMP3(doneEncoding);
-        }
-        if (recordVideo) {
-            recordVideo.stopRecording(function() {
-                PostBlob(recordVideo.getBlob(), 'video', 'video_' + fileName + '.webm');
+        if (recorder) {
+            recorder.stopRecording(function(url) {
+                // multiple solutions dfor saving the recorded video :
+                // - download it immediatly -> recorder.save();
+                // - allow user to download it with a button -> button.click -> recorder.save();
+                // - upload it to server -> PostBlob (choosen solution for now)
+                // - save it in 'browser db' -> writeToDisk
+                //recorder.save();
+                //recorder.writeToDisk();
+                cancelAnalyserUpdates();
+                PostBlob(recorder.getBlob(), fileName + '.webm');
+                // enable download 'just recorded file' button
+                //$('#download').prop('disabled', false);
             });
         }
     };
+}
+
+function captureUserMedia(callback) {
+    navigator.getUserMedia = navigator.mozGetUserMedia || navigator.webkitGetUserMedia;
+    navigator.getUserMedia({
+        audio: true,
+        video: true
+    }, function(stream) {
+        /*if (stream.getAudioTracks().length === 0 && stream.getVideoTracks().length === 0) {
+            alert('you have no webcam nore mic available on your device');
+        } else {*/
+        var html = '';
+        html += '<video id="video-2" controls="controls" preload="none" width="100%" height="270">';
+        html += '   <source src="' + window.URL.createObjectURL(stream) + '" type="video/webm" ></source>';
+        html += '</video>';
+        $("#video-2-container").children().remove();
+        $("#video-2-container").append(html);
+        initPlayer2();
+        player2.play();
+        player2.setMuted(true);
+        callback(stream);
+        gotStream(stream);
+        //}
+    }, function(error) {
+        console.error(error);
+    });
 }
 // local file selection
 function handleFileSelect(evt) {
@@ -393,19 +379,20 @@ function getUser() {
     return uid;
 }
 
-function PostBlob(blob, fileType, fileName) {
+function PostBlob(blob, fileName) {
     console.log('PostBlob is invoked', arguments);
+    showWaitModal();
     // FormData
     var formData = new FormData();
-    formData.append(fileType + '-filename', fileName);
-    formData.append(fileType + '-blob', blob);
-    var owner = isStudent ? 'student' : 'teacher';
-    formData.append(fileType + '-owner', owner);
+    formData.append('filename', fileName);
+    formData.append('blob', blob);
+    var owner = 'student';
+    formData.append('owner', owner);
     // user id to create unique folder
     formData.append('uid', userId);
     TrackManager.togglePlayerButtons();
     // POST the Blob
-    xhr('save.php', formData, null, function(fileURL) {});
+    xhr('save2.php', formData, null, function(fileURL) {});
 }
 
 function xhr(url, data, progress, callback) {
@@ -414,24 +401,16 @@ function xhr(url, data, progress, callback) {
         if (request.readyState === 4 && request.status === 200) {
             //callback(request.responseText);
             var track = JSON.parse(request.responseText);
+            console.log(track);
             TrackManager.addTrack(track);
-            if ('video' === track.type) {
-                var html = '';
-                html += '<video id="video-2" controls="controls" preload="none" width="100%" height="270">';
-                html += '   <source src="' + track.url + '?2" type="video/webm" ></source>';
-                html += '</video>';
-                $("#video-2-container").children().remove();
-                $("#video-2-container").append(html);
-                initPlayer2();
-                videoUploaded = true;
-            } else if ('audio' === track.type) {
-                sound2 = new Audio(track.url);
-                audioUploaded = true;
-            }
-            // hide loader modal
-            if (audioUploaded && videoUploaded) {
-                hideWaitModal();
-            }
+            hideWaitModal();
+            var html = '';
+            html += '<video id="video-2" controls="controls" preload="none" width="100%" height="270">';
+            html += '   <source src="' + track.url + '" type="video/webm" ></source>';
+            html += '</video>';
+            $("#video-2-container").children().remove();
+            $("#video-2-container").append(html);
+            initPlayer2();
         }
     };
     request.upload.onprogress = function(e) {
@@ -447,26 +426,6 @@ function xhr(url, data, progress, callback) {
     request.open('POST', url);
     request.send(data);
 }
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// AUDIO RECORDER 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-function gotStream(stream) {
-    inputPoint = audioContext.createGain();
-    // Create an AudioNode from the stream.
-    realAudioInput = audioContext.createMediaStreamSource(stream);
-    audioInput = realAudioInput;
-    audioInput.connect(inputPoint);
-    analyserNode = audioContext.createAnalyser();
-    analyserNode.fftSize = 2048;
-    inputPoint.connect(analyserNode);
-    // for audio MP3 export
-    audioRecorder = new Recorder(inputPoint);
-    zeroGain = audioContext.createGain();
-    zeroGain.gain.value = 0.0;
-    inputPoint.connect(zeroGain);
-    zeroGain.connect(audioContext.destination);
-    updateAnalysers();
-}
 // mp3 encoding callback
 function doneEncoding(blob) {
     PostBlob(blob, 'audio', 'audio_' + fileName + '.mp3');
@@ -480,30 +439,6 @@ function initPlayer1() {
         pauseOtherPlayers: false,
         features: ['playpause', 'progress', 'current', 'duration', 'tracks', 'volume'],
         success: function(mediaElement, domObject) {
-            // listen to event in order to sync audio and video (if necessary)  
-            mediaElement.addEventListener('loadeddata', function(e) {
-                //console.log('player 1 loaded');
-                if (sound1) sound1.currentTime = e.target.currentTime;
-            }, false);             
-            mediaElement.addEventListener('seeked', function(e) {
-                if (sound1) sound1.currentTime = e.target.currentTime;
-            }, false);
-            mediaElement.addEventListener('play', function(e) {
-                if (sound1) {
-                    sound1.volume = mediaElement.volume;
-                    sound1.muted = mediaElement.muted;
-                    sound1.play();
-                }
-            }, false);
-            mediaElement.addEventListener('pause', function(e) {
-                if (sound1) sound1.pause();
-            }, false);
-            mediaElement.addEventListener('volumechange', function(e) {
-                if (sound1) {
-                    sound1.volume = mediaElement.volume;
-                    sound1.muted = mediaElement.muted;
-                }
-            }, false);
             mediaElement.addEventListener('ended', function(e) {
                 player1Ended = true;
                 TrackManager.deletePlaying('video-1');
@@ -522,31 +457,6 @@ function initPlayer2() {
         pauseOtherPlayers: false,
         features: ['playpause', 'progress', 'current', 'duration', 'tracks', 'volume'],
         success: function(mediaElement, domObject) {
-            //console.log('player 2 success');
-            // listen to event in order to sync audio and video (if necessary) 
-            mediaElement.addEventListener('loadeddata', function(e) {
-                //console.log('player 2 loaded');
-                if (sound2) sound2.currentTime = e.target.currentTime;
-            }, false);             
-            mediaElement.addEventListener('seeked', function(e) {
-                if (sound2) sound2.currentTime = e.target.currentTime;
-            }, false);
-            mediaElement.addEventListener('play', function(e) {
-                if (sound2) {
-                    sound2.volume = mediaElement.volume;
-                    sound2.muted = mediaElement.muted;
-                    sound2.play();
-                }
-            }, false);
-            mediaElement.addEventListener('pause', function(e) {
-                if (sound2) sound2.pause();
-            }, false);
-            mediaElement.addEventListener('volumechange', function(e) {
-                if (sound2) {
-                    sound2.volume = mediaElement.volume;
-                    sound2.muted = mediaElement.muted;
-                }
-            }, false);
             mediaElement.addEventListener('ended', function(e) {
                 player2Ended = true;
                 TrackManager.deletePlaying('video-2');
@@ -583,43 +493,61 @@ function hideWaitModal() {
     $('#pleaseWaitDialog').modal('hide');
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// SPECTRUM ANALYSER
+// MIC LEVEL ANALYSER
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+function gotStream(stream) {
+    inputPoint = audioContext.createGain();
+    // Create an AudioNode from the stream.
+    realAudioInput = audioContext.createMediaStreamSource(stream);
+    audioInput = realAudioInput;
+    audioInput.connect(inputPoint);
+    analyserNode = audioContext.createAnalyser();
+    analyserNode.smoothingTimeConstant = 0.3;
+    analyserNode.fftSize = 2048;
+    inputPoint.connect(analyserNode);
+    updateAnalyser();
+}
+
 function cancelAnalyserUpdates() {
     window.cancelAnimationFrame(rafID);
+    // clear the current state
+    analyserContext.clearRect(0, 0, canvasWidth, canvasHeight);
     rafID = null;
 }
 
-function updateAnalysers(time) {
+function updateAnalyser(time) {
     if (!analyserContext) {
         var canvas = document.getElementById("analyser");
         canvasWidth = canvas.width;
         canvasHeight = canvas.height;
         analyserContext = canvas.getContext('2d');
+        gradient = analyserContext.createLinearGradient(0, 0, 0, canvasHeight);
+        gradient.addColorStop(1, '#ffff00'); // min level color
+        gradient.addColorStop(0.15, '#ff0000'); // max level color
     }
-    // analyzer draw code here
+    // mic input level draw code here
     {
-        var SPACING = 3;
-        var BAR_WIDTH = 1;
-        var numBars = Math.round(canvasWidth / SPACING);
-        var freqByteData = new Uint8Array(analyserNode.frequencyBinCount);
-        analyserNode.getByteFrequencyData(freqByteData);
+        var array = new Uint8Array(analyserNode.frequencyBinCount);
+        analyserNode.getByteFrequencyData(array);
+        var average = getAverageVolume(array);
+        // clear the current state
         analyserContext.clearRect(0, 0, canvasWidth, canvasHeight);
-        //analyserContext.fillStyle = '#F6D565';
-        analyserContext.fillStyle = '#3276b1';
-        analyserContext.lineCap = 'round';
-        var multiplier = analyserNode.frequencyBinCount / numBars;
-        // Draw rectangle for each frequency bin.
-        for (var i = 0; i < numBars; ++i) {
-            var magnitude = 0;
-            var offset = Math.floor(i * multiplier);
-            // gotta sum/average the block, or we miss narrow-bandwidth spikes
-            for (var j = 0; j < multiplier; j++) magnitude += freqByteData[offset + j];
-            magnitude = magnitude / multiplier;
-            var magnitude2 = freqByteData[i * multiplier];
-            //analyserContext.fillStyle =  '#FFFFFF';//"hsl( " + Math.round((i * 360) / numBars) + ", 100%, 50%)";
-            analyserContext.fillRect(i * SPACING, canvasHeight, BAR_WIDTH, -magnitude);
-        }
+        // set the fill style
+        analyserContext.fillStyle = gradient;
+        // create the meters
+        analyserContext.fillRect(0, canvasHeight - average, canvasWidth, canvasHeight);
     }
-    rafID = window.requestAnimationFrame(updateAnalysers);
+    rafID = window.requestAnimationFrame(updateAnalyser);
+}
+
+function getAverageVolume(array) {
+    var values = 0;
+    var average;
+    var length = array.length;
+    // get all the frequency amplitudes
+    for (var i = 0; i < length; i++) {
+        values += array[i];
+    }
+    average = values / length;
+    return average;
 }

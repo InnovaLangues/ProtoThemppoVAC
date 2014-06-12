@@ -49,12 +49,14 @@ var TrackManager = {
     addTrack: function(track) {
         // Add track to list (student + models / audio + video / audio / video)
         this.tracks.push(track);
-        // Only video ar shown in list (corresponding audio files (if exists) are automatically retrieved)
+        // Only video ar shown in list
         if ('video' === track.type || 'av' === track.type) {
             // Remove no track line if needed
             if (track.owner === 'student') {
                 this.s_container.find('.no-track').remove();
-            } else if (track.owner === 'teacher') this.t_container.find('.no-track').remove();
+            } else if (track.owner === 'teacher') {
+                this.t_container.find('.no-track').remove();
+            }
             // Display new track
             var html = '';
             html += '<tr id="' + track.name + '">';
@@ -66,14 +68,14 @@ var TrackManager = {
             // name
             html += '    <td>' + track.name + '</td>';
             html += '    <td>';
-            /*if (track.downloadable) {
+            if (track.downloadable) {
                 // Download button
                 //var file = track.uid + '/' + track.name + '.' + track.extension; //('audio' === track.type ? '.wav' : '.webm');
                 html += '   <a href="download.php?file=' + track.url + '" target="_blank" class="track-download btn btn-sm btn-default" role="button">';
                 html += '       <span class="glyphicon glyphicon-download-alt"></span>';
                 html += '       <span class="sr-only">Download</span>';
                 html += '   </a>';
-            }*/
+            }
             if (track.deletable) {
                 // Delete button
                 html += '   <button class="track-delete btn btn-sm btn-danger" role="button">';
@@ -90,14 +92,14 @@ var TrackManager = {
     /**
      * Delete a track from server
      */
-    deleteTrack: function(fileName, isAudio) {
+    deleteTrack: function(fileName) {
         var track = this.getTrack(fileName);
         if (typeof track !== 'undefined' && null !== track && track.length !== 0) {
             var manager = this;
-            var url = isAudio ? track.url.replace('video', 'audio').replace('webm', 'mp3') : track.url;
+            // var url = track.url;
             // Delete file from server
             var formData = new FormData();
-            formData.append('delete-file', url);
+            formData.append('delete-file', track.url);
             var request = new XMLHttpRequest();
             request.onreadystatechange = function() {
                 if (4 == request.readyState && 200 == request.status) {
@@ -169,14 +171,10 @@ var TrackManager = {
         if (player1 && player1Src !== '') {
             player1.play();
             manager.playing.push('video-1');
-            if (sound1 !== null) sound1.play();
         }
         if (player2 && player2Src !== '') {
             player2.play();
             manager.playing.push('video-2');
-            if (sound2 !== null) {
-                sound2.play();
-            }
         }
         // Manage buttons state
         this.togglePlayerButtons();
@@ -190,10 +188,8 @@ var TrackManager = {
             var player = this.playing[i];
             if (player1 && 'video-1' === player) {
                 player1.pause();
-                if (sound1) sound1.pause();
             } else if (player2 && 'video-2' === player) {
                 player2.pause();
-                if (sound2) sound2.pause();
             }
         }
         // Manage buttons state
@@ -209,17 +205,9 @@ var TrackManager = {
             if (player1 && 'video-1' === player) {
                 player1.pause();
                 player1.setCurrentTime(0);
-                if (sound1) {
-                    //sound1.currentTime = 0;
-                    sound1.pause();
-                }
             } else if (player2 && 'video-2' === player) {
                 player2.pause();
                 player2.setCurrentTime(0);
-                if (sound2) {
-                    sound2.pause();
-                    //sound2.currentTime = 0;
-                }
             }
         }
         // Remove list of currently playing

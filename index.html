@@ -12,12 +12,10 @@
         <script type="text/javascript" src="js/libs/jquery.min.js"></script>
         <script type="text/javascript" src="js/libs/bootstrap.min.js"></script>
         <script type="text/javascript" src="js/libs/mediaelement-and-player.min.js"></script>
-        <!--<script type="text/javascript" src="js/libs/bootbox.js"></script>-->
-        <script type="text/javascript" src="js/libs/RecordRTC.js"></script>
-        <script type="text/javascript" src="js/libs/recorder.js"></script>
         <!-- MY JS SCRIPTS -->
         <script type="text/javascript" src="js/TrackManager.js"></script>
         <script type="text/javascript" src="js/main.js"></script>
+        <script type="text/javascript" src="js/libs/RecordRTC.js"></script>
     </head>
     <body>
         <div id="container" class="container">
@@ -28,7 +26,7 @@
                     </div>
                     <div class="col-md-8">
                         <h1>Themppo <small>Prototype AAC/VAC</small></h1>
-                        <h3>! Only works on Google Chrome !</h3>
+                        <h3>! Only works on Firefox !</h3>
                     </div>
                     <div class="col-md-2">
                         <h4 id="user-name"></h4>
@@ -94,18 +92,23 @@
                         <div class="col-md-12">
                             <div class="control-container">
                                 <button id="record-start" class="btn btn-primary" role="button">
-                                <span class="glyphicon glyphicon-record"></span> Rec start
+                                    <span class="glyphicon glyphicon-record"></span> Rec start
                                 </button>
                                 <button id="record-stop" class="btn btn-default" role="button" disabled="disabled">
-                                <span class="glyphicon glyphicon-stop"></span> Rec stop
+                                    <span class="glyphicon glyphicon-stop"></span> Rec stop
                                 </button>
-                                <canvas id="analyser" title="Spectrum analyser"></canvas>
+                                <!-- WIDHT & HEIGHT MUST BE SET INLINE -->
+                                <canvas id="analyser" title="Mic level" width="25px" height="34px"></canvas>
+                                <!--<button id="download" class="btn btn btn-default" role="button" title="download recorded track" disabled="disabled">
+                                    <span class="glyphicon glyphicon-download-alt"></span>
+                                </button>-->
                                 <button class="btn btn-default" role="button" data-id="video-2" title="Player 2 source" data-toggle="modal" data-target="#file-dialog">
-                                <span class="glyphicon glyphicon-film"></span>
+                                    <span class="glyphicon glyphicon-film"></span>
                                 </button>
                                 <button id="tracks-delete" class="btn btn-primary btn-danger" role="button" title="delete all recorded tracks" disabled="disabled">
-                                <span class="glyphicon glyphicon-trash"></span>
+                                    <span class="glyphicon glyphicon-trash"></span>
                                 </button>
+                                 
                             </div>
                         </div>
                     </div>
@@ -259,7 +262,7 @@
                     </div>
                 </div>
             </div>
-
+            <!-- SYNC BUTTONS HELP MODAL -->
             <div class="modal fade" id="sync-help" tabindex="-1" role="dialog" aria-hidden="true">
                 <div class="modal-dialog">
                     <div class="modal-content">
