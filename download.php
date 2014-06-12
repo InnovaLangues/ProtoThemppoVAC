@@ -3,7 +3,8 @@
 $uploadDir = 's_uploads/';
 
 if (!empty($_REQUEST['file'])) {
-    $path = $uploadDir . $_REQUEST['file'];
+    //$path = $uploadDir . $_REQUEST['file'];
+    $path = $_REQUEST['file'];
 
     if (is_file($path)) {
 
