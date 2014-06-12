@@ -1,8 +1,4 @@
- avconv -i MattCutts_2011U.mp4 -c:v libvpx -b:v 1M -c:a libvorbis MattCutts_2011U.webm
 
-/// Notes prototype version 2 :
-
-- On peut charger une video à partir du web uniquement depuis Youtube
 - Le chargement de fichiers video depuis l'ordinateur est limitée aux fichiers mp4 et webm
 - Le chargement de media depuis le web ou la machine fonctionne si le fichier contient du son et de la vidéo
 - La sélection des fichiers est toujours multiple, il faut désélectionné puis resélectionner
