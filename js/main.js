@@ -115,8 +115,9 @@ function init() {
     });
     // handle modal file chooser closing event
     $('#file-dialog').on('hidden.bs.modal', function(e) {
-        // disable download 'just recorded file' button       
-        // $('#download').prop('disabled', true);
+        // disable download 'just recorded file' button
+        //$('#download').prop('enabled', false);
+        $('#download').prop('disabled', true);
         if (fileButtonCaller && fileButtonCaller !== 'undefined') {
             var videoSrc = '';
             //var audioSrc = '';
@@ -287,14 +288,14 @@ function init() {
                 // multiple solutions dfor saving the recorded video :
                 // - download it immediatly -> recorder.save();
                 // - allow user to download it with a button -> button.click -> recorder.save();
-                // - upload it to server -> PostBlob (choosen solution for now)
+                // - upload it to server -> PostBlob
                 // - save it in 'browser db' -> writeToDisk
                 //recorder.save();
                 //recorder.writeToDisk();
                 cancelAnalyserUpdates();
                 PostBlob(recorder.getBlob(), fileName + '.webm');
                 // enable download 'just recorded file' button
-                //$('#download').prop('disabled', false);
+                $('#download').prop('disabled', false);
             });
         }
     };
