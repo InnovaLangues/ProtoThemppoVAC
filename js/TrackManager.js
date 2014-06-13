@@ -47,6 +47,8 @@ var TrackManager = {
         });
     },
     addTrack: function(track) {
+        console.log('track from add track');
+        console.log(track);
         // Add track to list (student + models / audio + video / audio / video)
         this.tracks.push(track);
         // Only video ar shown in list
@@ -156,6 +158,73 @@ var TrackManager = {
         request.open('POST', 'list.php');
         request.send(formData);
     },
+    loadUserVideos: function(db, uid) {
+        var manager = this;
+        var trans = db.transaction(["video"]);
+        var store = trans.objectStore("video");
+        // Get everything in the store;
+        var keyRange = IDBKeyRange.lowerBound(0);
+        var cursorRequest = store.openCursor(keyRange);
+        var videos = [];
+        cursorRequest.onsuccess = function(e) {
+            var result = e.target.result;
+            if ( !! result == false) return;
+            console.log(result.value);
+            videos.push(result.value);
+            manager.addStudentVideo(result.value);
+            
+            result.continue ();
+        };
+        cursorRequest.onerror = function() {
+            console.log('oups');
+        };
+        return videos;
+    },
+    addStudentVideo: function(track) {
+        console.log('track from add student video');
+        console.log(track);
+        // Add track to list (student + models / audio + video / audio / video)
+        /*this.tracks.push(track);
+        // Only video ar shown in list
+        // Remove no track line if needed
+        if (track.owner === 'student') {
+            this.s_container.find('.no-track').remove();
+        } else if (track.owner === 'teacher') {
+            this.t_container.find('.no-track').remove();
+        }
+        // Display new track
+        var html = '';
+        html += '<tr id="' + track.name + '">';
+        html += '    <td class="text-center"><input type="radio" class="track-select" name="select" id="select-' + track.name + '" value="1"/></td>';
+        // icone
+        html += '    <td>';
+        html += '       <span class="h2 glyphicon glyphicon-film"></span> ';
+        html += '    </td>';
+        // name
+        html += '    <td>' + track.name + '</td>';
+        html += '    <td>';
+        if (track.downloadable) {
+            html += '<button class="track-download btn btn-sm btn-default" role="button" title="download recorded track">';
+            html += '   <span class="glyphicon glyphicon-download-alt"></span>';
+            html += '</button>';
+            // Download button
+            //var file = track.uid + '/' + track.name + '.' + track.extension; //('audio' === track.type ? '.wav' : '.webm');
+            html += '   <a href="download.php?file=' + track.url + '" target="_blank" class="track-download btn btn-sm btn-default" role="button">';
+            html += '       <span class="glyphicon glyphicon-download-alt"></span>';
+            html += '       <span class="sr-only">Download</span>';
+            html += '   </a>';
+        }
+        if (track.deletable) {
+            // Delete button
+            html += '   <button class="track-delete btn btn-sm btn-danger" role="button">';
+            html += '       <span class="glyphicon glyphicon-trash"></span>';
+            html += '       <span class="sr-only">Delete</span>';
+            html += '   </button>';
+        }
+        html += '    </td>';
+        this.s_container.append(html);
+        this.toggleDeleteButton();*/
+    },
     /**
      * Start playing selected tracks (on both players)
      */
@@ -164,7 +233,6 @@ var TrackManager = {
         var manager = this;
         var player1Src = '';
         var player2Src = '';
-
         // !! players && sounds are in main.js
         if (player1) player1Src = $('#' + player1.media.id).attr('src');
         if (player2) player2Src = $('#' + player2.media.id).attr('src');
@@ -265,36 +333,6 @@ var TrackManager = {
         }
         this.buttonDelete.prop('disabled', !enabled);
     },
-    /**
-     * Save files on server
-     */
-    /*save: function(fileType, fileName, blob) {
-        console.log('save');
-        var manager = this;
-        // FormData
-        var formData = new FormData();
-        var file = fileName + ('audio' === fileType ? '.wav' : '.webm');
-        formData.append(fileType + '-filename', file);
-        formData.append(fileType + '-blob', blob);
-        // Send file to server
-        var request = new XMLHttpRequest();
-        request.onreadystatechange = function() {
-            if (4 == request.readyState && 200 == request.status) {
-                if (null != request.responseText && request.responseText.length != 0 && 'error' != request.responseText) {
-                    var track = JSON.parse(request.responseText);
-                    // Display new track in list
-                    manager.addTrack(track);
-                } else {
-                    console.log('Track Manger Save Error');
-                }
-            }
-        };
-        request.upload.onprogress = function(e) {
-           
-        };
-        request.open('POST', 'save.php');
-        request.send(formData);
-    },*/
     /**
      * Retrieve the track object in tracks list from its name
      */

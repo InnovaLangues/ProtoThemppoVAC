@@ -39,6 +39,21 @@ var gradient;
 var fileName;
 // file opener caller (video-1, video-2)
 var fileButtonCaller;
+// INDEXED DB
+// In the following line, you should include the prefixes of implementations you want to test.
+window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
+// DON'T use "var indexedDB = ..." if you're not in a function.
+// Moreover, you may need references to some window.IDB* objects:
+window.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction;
+window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
+if (!window.indexedDB) {
+    window.alert("Your browser doesn't support a stable version of IndexedDB. Such and such feature will not be available.");
+}
+var dbRequest;
+var db;
+const DB_NAME = "videos";
+const DB_VERSION = 3;
+var videoData; // array of videos for the user
 // ON DOCUMENT READY
 $(document).ready(function() {
     // open authentication modal
@@ -76,6 +91,43 @@ $(document).ready(function() {
 // INIT APP & BIND EVENTS
 function init() {
     TrackManager.initialize(userId);
+    videoData = [];
+
+    dbRequest = window.indexedDB.open(DB_NAME, DB_VERSION);
+    dbRequest.onerror = function(event) {
+        alert("Database error: " + event.target.errorCode);
+    };
+    dbRequest.onsuccess = function(event) {
+        db = dbRequest.result;
+        console.log(db);
+    };
+    dbRequest.onupgradeneeded = function(event) {
+        console.log('on upgrade needed');
+        var db = event.target.result;
+        // Create an objectStore for this database
+        var objectStore = db.createObjectStore("video", {
+            keyPath: "id",
+            autoIncrement: true
+        });
+        // Create an index to search videos by user name. We may have duplicates
+        // so we can't use a unique index.
+        objectStore.createIndex("uName", "uName", {
+            unique: false
+        });
+        
+       /* const customerData = [
+  { ssn: "444-44-4444", name: "Bill", age: 35, email: "bill@company.com" },
+  { ssn: "555-55-5555", name: "Donna", age: 32, email: "donna@home.org" }
+];*/
+        objectStore.transaction.oncomplete = function(event) {
+            console.log('transaction complete');
+            // Store values in the newly created objectStore.
+            var videosObjectStore = db.transaction("video", "readwrite").objectStore("video");
+            for (var i in videoData) { // videoData / customerData
+                videosObjectStore.add(videoData[i]);
+            }
+        }
+    };
     // stop recording button
     stop = document.getElementById('record-stop');
     stop.disabled = true;
@@ -296,6 +348,18 @@ function init() {
                 PostBlob(recorder.getBlob(), fileName + '.webm');
                 // enable download 'just recorded file' button
                 $('#download').prop('disabled', false);
+                console.log(db);
+
+                var transaction = db.transaction(["video"], "readwrite");
+                var objectStore = transaction.objectStore("video");                    
+                var request = objectStore.put({ uName: userId, video: recorder.getBlob(), tName: fileName, owner: "student" });
+                request.onsuccess = function (evt) {
+                    console.log(evt.target);
+                    TrackManager.loadUserVideos(db, userId);
+                };
+                request.onerror = function(e) {
+                    console.log(e.value);
+                };
             });
         }
     };
