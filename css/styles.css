@@ -5,9 +5,10 @@
     vertical-align: middle !important;
 }
 #analyser {
-    background: #202020;
+    background: #eee;
     border-radius: 4px;
     vertical-align: middle;
+    float:right;
 }
 div.fileinputs {
     position: relative;

@@ -3,6 +3,7 @@ var player2Ended = false;
 // Connected user
 var userId = '';
 var isStudent = true;
+
 // media source (model, myrecords, web, local)
 var mediaSource = null;
 // html video element 1
@@ -35,19 +36,16 @@ var rafID = null;
 var analyserContext = null;
 var canvasWidth, canvasHeight;
 var gradient;
-// file name to save / upload
+// file name to save
 var fileName;
 // file opener caller (video-1, video-2)
 var fileButtonCaller;
 // INDEXED DB
-// In the following line, you should include the prefixes of implementations you want to test.
 window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
-// DON'T use "var indexedDB = ..." if you're not in a function.
-// Moreover, you may need references to some window.IDB* objects:
 window.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction;
 window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
 if (!window.indexedDB) {
-    window.alert("Your browser doesn't support a stable version of IndexedDB. Such and such feature will not be available.");
+    window.alert("Your browser doesn't support a stable version of IndexedDB. Saving your videos will not be available.");
 }
 var dbRequest;
 var db;
@@ -89,9 +87,7 @@ $(document).ready(function() {
     });
 });
 // INIT APP & BIND EVENTS
-function init() {
-    TrackManager.initialize(userId);
-    videoData = [];
+function init() {    
 
     dbRequest = window.indexedDB.open(DB_NAME, DB_VERSION);
     dbRequest.onerror = function(event) {
@@ -99,7 +95,8 @@ function init() {
     };
     dbRequest.onsuccess = function(event) {
         db = dbRequest.result;
-        console.log(db);
+        TrackManager.initialize(db, userId);
+        videoData = [];
     };
     dbRequest.onupgradeneeded = function(event) {
         console.log('on upgrade needed');
@@ -115,15 +112,11 @@ function init() {
             unique: false
         });
         
-       /* const customerData = [
-  { ssn: "444-44-4444", name: "Bill", age: 35, email: "bill@company.com" },
-  { ssn: "555-55-5555", name: "Donna", age: 32, email: "donna@home.org" }
-];*/
         objectStore.transaction.oncomplete = function(event) {
             console.log('transaction complete');
             // Store values in the newly created objectStore.
             var videosObjectStore = db.transaction("video", "readwrite").objectStore("video");
-            for (var i in videoData) { // videoData / customerData
+            for (var i in videoData) {
                 videosObjectStore.add(videoData[i]);
             }
         }
@@ -160,9 +153,6 @@ function init() {
                     }
                 });
             }
-            /*RecordRTC.getFromDisk('all', function(dataURL, type) {
-                console.log(dataURL + ' | ' + type);
-            });*/
         }
     });
     // handle modal file chooser closing event
@@ -175,11 +165,21 @@ function init() {
             //var audioSrc = '';
             var mime = '';
             var hasFile = false;
+            var track;
             if (mediaSource) {
-                // open my track or teacher track
-                if ($('.track-select:checked')[0] && ('teacher-tracks' === mediaSource || 'my-tracks' === mediaSource)) {
+                // open my track
+                if ($('.track-select:checked')[0] && 'my-tracks' === mediaSource) {
+                    var id = $('.track-select:checked').parents('tr').prop('id');
+                    track = TrackManager.getStudentTrack(id);
+                    // mime = track.extension === 'mp4' ? 'video/mp4' : 'video/webm';
+                    mime = track.video.type; // video is a blob file if from student
+                    videoSrc = window.URL.createObjectURL(track.video);
+                    hasFile = true;
+                }
+                // open teacher track
+                else if ($('.track-select:checked')[0] && 'teacher-tracks' === mediaSource) {
                     var name = $('.track-select:checked').parents('tr').prop('id');
-                    var track = TrackManager.getTrack(name);
+                    track = TrackManager.getWebTrack(name);
                     mime = track.extension === 'mp4' ? 'video/mp4' : 'video/webm';
                     videoSrc = track.url;
                     hasFile = true;
@@ -206,35 +206,28 @@ function init() {
                 }
                 // other computer track 
                 else if ('local-track' === mediaSource) {
-                    //sound1 = null;
-                    //sound2 = null;
                     TrackManager.togglePlayerButtons();
                     // everything else is done by handleFileSelect() method
                 }
                 // from teacher tracks or student tracks
                 if ('web-track' !== mediaSource && 'local-track' !== mediaSource && hasFile) {
-                    var html = '';
-                    // Kind of Chrome Hack... Chrome is not able to play at the same time the same source : http://stackoverflow.com/questions/19375877/chrome-not-play-html5-video-on-duplicated-tags
-                    /*if ('video-1' === fileButtonCaller) {
-                        videoSrc += '?1';
-                        audioSrc += '?1';
-                    } else if ('video-2' === fileButtonCaller) {
-                        videoSrc += '?2';
-                        audioSrc += '?2';
-                    }*/
-                    html += '<video id="' + fileButtonCaller + '"  src="' + videoSrc + '" preload="none" controls="controls" width="100%" height="270">';
-                    //html += '   <source src="' + videoSrc + '" type="'+mime+'" ></source>';
+                    var html = '';                   
+                    html += '<video id="' + fileButtonCaller + '"  src="' + videoSrc + '" preload="none" type="' + mime + '" controls="controls" width="100%" height="270">';
                     html += '</video>';
                     if ('video-1' === fileButtonCaller) {
                         $("#video-1-container").children().remove();
                         $("#video-1-container").append(html);
                         initPlayer1();
-                        TrackManager.togglePlayerButtons();
+                        TrackManager.togglePlayerButtons(); 
+                        TrackManager.player1Track = track;
+
+                    TrackManager.selected.push();0
                     } else if ('video-2' === fileButtonCaller) {
                         $("#video-2-container").children().remove();
                         $("#video-2-container").append(html);
                         initPlayer2();
                         TrackManager.togglePlayerButtons();
+                        TrackManager.player2Track = track;
                     }
                 }
             }
@@ -264,55 +257,40 @@ function init() {
     $('body').on('click', '#tracks-delete', this, function(el) {
         $('#del-all-confirm-dialog').modal('show');
     });
-    // download the just recorded file (blob)
-    $('body').on('click', '#download', this, function(el) {
-        recorder.save();
-    });
     // delete all recorded tracks confirm OK
     $('#del-all-confirm-dialog').find('.modal-footer #confirm').on('click', function() {
         var html = '<img width="100%" class="no-video-img" height="270" alt="no image" title="PLease select a video" src="media/poster/poster.jpg"/>';
-        TrackManager.deleteAllTracks();
+        TrackManager.deleteAllStudentTracks(db);
         $("#video-1-container").children().remove();
         $("#video-2-container").children().remove();
         $("#video-1-container").append(html);
         $("#video-2-container").append(html);
         $('#del-all-confirm-dialog').modal('hide');
     });
-    // delete one track (modal window button)
+    // delete one track (modal window button) -> Only student records
     $('body').on('click', '.track-delete', this, function(el) {
-        // Get track name
-        var trackToRemove = $(this).parents('tr').prop('id');
-        var video1Src = $('#video-1').attr('src');
-        var video2Src = $('#video-2').attr('src');
-        if (video2Src !== undefined || video1Src !== undefined) {
-            var html = '<img width="100%" class="no-video-img" height="270" alt="no image" title="PLease select a video" src="media/poster/poster.jpg"/>';
-            var arr;
-            var file;
-            // check if the file we want to delete is used by player 1
-            if (video1Src !== undefined) {
-                arr = video1Src.split('/');
-                file = arr[arr.length - 1];
-                if (file === trackToRemove + '.webm') {
-                    $("#video-1-container").children().remove();
-                    $("#video-1-container").append(html);
-                    //sound1 = null;
-                    TrackManager.deletePlaying('video-1');
-                }
-            }
-            if (video2Src !== undefined) {
-                arr = video2Src.split('/');
-                file = arr[arr.length - 1];
-                // check if the file we want to delete is used by player 2
-                if (file === trackToRemove + '.webm') {
-                    $("#video-2-container").children().remove();
-                    $("#video-2-container").append(html);
-                    //sound2 = null;
-                    TrackManager.deletePlaying('video-2');
-                }
-            }
+        // Get track id
+        var trackId = $(this).parents('tr').prop('id');
+        var el = document.getElementById(trackId);
+
+         var html = '<img width="100%" class="no-video-img" height="270" alt="no image" title="PLease select a video" src="media/poster/poster.jpg"/>';
+  
+        // check if the file we want to delete is used by player 1
+        if (TrackManager.player1Track && TrackManager.player1Track.tName === el.dataset.name) {
+            $("#video-1-container").children().remove();
+            $("#video-1-container").append(html);
+            TrackManager.deletePlaying('video-1');
         }
-        // delete video track
-        TrackManager.deleteTrack(trackToRemove);
+
+        // check if the file we want to delete is used by player 2
+        if (TrackManager.player2Track  && TrackManager.player2Track.tName === el.dataset.name) {
+            $("#video-2-container").children().remove();
+            $("#video-2-container").append(html);
+            TrackManager.deletePlaying('video-2');
+        }
+
+        // delete video track (it is a student video)
+        TrackManager.deleteStudentTrack(trackId, db);
         TrackManager.togglePlayerButtons();
     });
     // handle start recording event
@@ -336,19 +314,10 @@ function init() {
         //player2.src = '';
         fileName = generateFileName();
         if (recorder) {
-            recorder.stopRecording(function(url) {
-                // multiple solutions dfor saving the recorded video :
-                // - download it immediatly -> recorder.save();
-                // - allow user to download it with a button -> button.click -> recorder.save();
-                // - upload it to server -> PostBlob
-                // - save it in 'browser db' -> writeToDisk
-                //recorder.save();
-                //recorder.writeToDisk();
+            recorder.stopRecording(function(url) {           
+                // stop vu meter
                 cancelAnalyserUpdates();
-                PostBlob(recorder.getBlob(), fileName + '.webm');
-                // enable download 'just recorded file' button
-                $('#download').prop('disabled', false);
-                console.log(db);
+                player2.setSrc(url);
 
                 var transaction = db.transaction(["video"], "readwrite");
                 var objectStore = transaction.objectStore("video");                    
@@ -371,9 +340,7 @@ function captureUserMedia(callback) {
         audio: true,
         video: true
     }, function(stream) {
-        /*if (stream.getAudioTracks().length === 0 && stream.getVideoTracks().length === 0) {
-            alert('you have no webcam nore mic available on your device');
-        } else {*/
+       
         var html = '';
         html += '<video id="video-2" controls="controls" preload="none" width="100%" height="270">';
         html += '   <source src="' + window.URL.createObjectURL(stream) + '" type="video/webm" ></source>';
@@ -385,7 +352,7 @@ function captureUserMedia(callback) {
         player2.setMuted(true);
         callback(stream);
         gotStream(stream);
-        //}
+
     }, function(error) {
         console.error(error);
     });
@@ -444,57 +411,7 @@ function getUser() {
     return uid;
 }
 
-function PostBlob(blob, fileName) {
-    console.log('PostBlob is invoked', arguments);
-    showWaitModal();
-    // FormData
-    var formData = new FormData();
-    formData.append('filename', fileName);
-    formData.append('blob', blob);
-    var owner = 'student';
-    formData.append('owner', owner);
-    // user id to create unique folder
-    formData.append('uid', userId);
-    TrackManager.togglePlayerButtons();
-    // POST the Blob
-    xhr('save2.php', formData, null, function(fileURL) {});
-}
 
-function xhr(url, data, progress, callback) {
-    var request = new XMLHttpRequest();
-    request.onreadystatechange = function() {
-        if (request.readyState === 4 && request.status === 200) {
-            //callback(request.responseText);
-            var track = JSON.parse(request.responseText);
-            console.log(track);
-            TrackManager.addTrack(track);
-            hideWaitModal();
-            var html = '';
-            html += '<video id="video-2" controls="controls" preload="none" width="100%" height="270">';
-            html += '   <source src="' + track.url + '" type="video/webm" ></source>';
-            html += '</video>';
-            $("#video-2-container").children().remove();
-            $("#video-2-container").append(html);
-            initPlayer2();
-        }
-    };
-    request.upload.onprogress = function(e) {
-        if (!progress) return;
-        if (e.lengthComputable) {
-            progress.value = (e.loaded / e.total) * 100;
-            progress.textContent = progress.value; // Fallback for unsupported browsers.
-        }
-        if (progress.value === 100) {
-            progress.value = 0;
-        }
-    };
-    request.open('POST', url);
-    request.send(data);
-}
-// mp3 encoding callback
-function doneEncoding(blob) {
-    PostBlob(blob, 'audio', 'audio_' + fileName + '.mp3');
-}
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // MEDIAELEMENT JS PLAYERS 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////

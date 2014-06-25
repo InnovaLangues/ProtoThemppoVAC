@@ -8,9 +8,21 @@ var TrackManager = {
      */
     t_container: null,
     /**
-     * List of all tracks
+     * List of web tracks (teacher models, stored on the server)
      */
-    tracks: [],
+    webTracks: [],
+    /**
+     * List of student tracks (stored on local db)
+     */
+    studentTracks: [],
+    /**
+     * selected track for player 1
+     */
+    player1Track: null,
+    /**
+     * selected track for player 2
+     */
+    player2Track: null,
     /**
      * List of tracks which are currently playing
      */
@@ -18,7 +30,7 @@ var TrackManager = {
     /**
      * Initialize the track manager (register events)
      */
-    initialize: function(userFolder) {
+    initialize: function(db, uid) {
         // Store buttons
         this.buttonPlay = $('#tracks-play');
         this.buttonPause = $('#tracks-pause');
@@ -29,7 +41,8 @@ var TrackManager = {
         // model tracks container
         this.t_container = $('#ttracks-container tbody');
         // Load tracks
-        this.loadTracks(userFolder);
+        this.loadWebTracks();
+        this.loadStudentTracks(db, uid);
         // Play selected tracks
         $('body').on('click', '#tracks-play', this, function(el) {
             el.data.play();
@@ -46,19 +59,78 @@ var TrackManager = {
             return false;
         });
     },
-    addTrack: function(track) {
-        console.log('track from add track');
-        console.log(track);
-        // Add track to list (student + models / audio + video / audio / video)
-        this.tracks.push(track);
+    /**
+     * Delete a track from server
+     */
+    deleteStudentTrack: function(id, db) {
+        var track = this.getStudentTrack(id);
+        if (typeof track !== 'undefined' && null !== track && track.length !== 0) {
+            var manager = this;
+            var trans = db.transaction(["video"], "readwrite");
+            var store = trans.objectStore("video");
+            // + is used to convert a string to an int
+            var request = store.delete(+id);
+            request.onsuccess = function(e) {
+                // remove track from UI list 
+                manager.s_container.find('#' + id).remove();
+                // remove track from array collection
+                var trackIndex = manager.getStudentTrackIndex(id);
+                manager.studentTracks.splice(trackIndex, 1);
+                if (manager.studentTracks.length == 0) {
+                    // Add no track line
+                    var html = '';
+                    html += '<tr class="no-track">';
+                    html += '    <td colspan="6" class="text-center"><em>You have no recorded track.</em></td>';
+                    html += '</tr>';
+                    manager.s_container.append(html);
+                }
+                manager.togglePlayButton();
+                manager.toggleDeleteButton();
+            };
+            request.onerror = function(e) {
+                console.log(e);
+            };
+        }
+    },
+    /**
+     * Delete all recorded tracks
+     */
+    deleteAllStudentTracks: function(db) {
+        for (var i = 0; i < this.studentTracks.length; i++) {
+            var track = this.studentTracks[i];
+            if ('student' === track.owner) this.deleteStudentTrack(track.id, db);
+        }
+        this.togglePlayButton();
+        this.toggleDeleteButton();
+    },
+    /**
+     * Load existing tracks from server
+     */
+    loadWebTracks: function() {
+        var manager = this;
+        var formData = new FormData();
+        var request = new XMLHttpRequest();
+        request.onreadystatechange = function() {
+            if (4 === request.readyState && 200 === request.status) {
+                var tracks = JSON.parse(request.responseText);
+                if (typeof tracks !== 'undefined' && null !== tracks && tracks.length !== 0) {
+                    for (var i = 0; i < tracks.length; i++) {
+                        var track = tracks[i];
+                        manager.addWebTrack(track);
+                    }
+                }
+            }
+        };
+        request.open('POST', 'list2.php');
+        request.send(formData);
+    },
+    // Add model track to list
+    addWebTrack: function(track) {
+        this.webTracks.push(track);
         // Only video ar shown in list
         if ('video' === track.type || 'av' === track.type) {
             // Remove no track line if needed
-            if (track.owner === 'student') {
-                this.s_container.find('.no-track').remove();
-            } else if (track.owner === 'teacher') {
-                this.t_container.find('.no-track').remove();
-            }
+            this.t_container.find('.no-track').remove();
             // Display new track
             var html = '';
             html += '<tr id="' + track.name + '">';
@@ -69,165 +141,68 @@ var TrackManager = {
             html += '    </td>';
             // name
             html += '    <td>' + track.name + '</td>';
-            html += '    <td>';
-            if (track.downloadable) {
-                // Download button
-                //var file = track.uid + '/' + track.name + '.' + track.extension; //('audio' === track.type ? '.wav' : '.webm');
-                html += '   <a href="download.php?file=' + track.url + '" target="_blank" class="track-download btn btn-sm btn-default" role="button">';
-                html += '       <span class="glyphicon glyphicon-download-alt"></span>';
-                html += '       <span class="sr-only">Download</span>';
-                html += '   </a>';
-            }
-            if (track.deletable) {
-                // Delete button
-                html += '   <button class="track-delete btn btn-sm btn-danger" role="button">';
-                html += '       <span class="glyphicon glyphicon-trash"></span>';
-                html += '       <span class="sr-only">Delete</span>';
-                html += '   </button>';
-            }
-            html += '    </td>';
-            if (track.owner === 'student') this.s_container.append(html);
-            else if (track.owner === 'teacher') this.t_container.append(html);
-            this.toggleDeleteButton();
+            this.t_container.append(html);
         }
     },
     /**
-     * Delete a track from server
-     */
-    deleteTrack: function(fileName) {
-        var track = this.getTrack(fileName);
-        if (typeof track !== 'undefined' && null !== track && track.length !== 0) {
-            var manager = this;
-            // var url = track.url;
-            // Delete file from server
-            var formData = new FormData();
-            formData.append('delete-file', track.url);
-            var request = new XMLHttpRequest();
-            request.onreadystatechange = function() {
-                if (4 == request.readyState && 200 == request.status) {
-                    // Remove track from list
-                    manager.s_container.find('#' + track.name).remove();
-                    var trackIndex = manager.getTrackIndex(fileName);
-                    manager.tracks.splice(trackIndex, 1);
-                    if (manager.tracks.length == 0) {
-                        // Add no track line
-                        var html = '';
-                        html += '<tr class="no-track">';
-                        html += '    <td colspan="6" class="text-center"><em>You have no recorded track.</em></td>';
-                        html += '</tr>';
-                        manager.s_container.append(html);
-                    }
-                    manager.togglePlayButton();
-                    manager.toggleDeleteButton();
-                }
-            };
-            request.open('POST', 'delete.php');
-            request.send(formData);
-        }
-    },
-    /**
-     * Delete all recorded tracks
-     */
-    deleteAllTracks: function() {
-        for (var i = 0; i < this.tracks.length; i++) {
-            var track = this.tracks[i];
-            if ('student' === track.owner) this.deleteTrack(track.name);
-        }
-        this.togglePlayButton();
-        this.toggleDeleteButton();
-    },
-    /**
-     * Load existing tracks from server
-     */
-    loadTracks: function(uid) {
-        var manager = this;
-        var formData = new FormData();
-        formData.append('uid', uid);
-        var request = new XMLHttpRequest();
-        request.onreadystatechange = function() {
-            if (4 === request.readyState && 200 === request.status) {
-                var tracks = JSON.parse(request.responseText);
-                if (typeof tracks !== 'undefined' && null !== tracks && tracks.length !== 0) {
-                    for (var i = 0; i < tracks.length; i++) {
-                        var track = tracks[i];
-                        manager.addTrack(track);
-                    }
-                }
-            }
-        };
-        request.open('POST', 'list.php');
-        request.send(formData);
-    },
-    loadUserVideos: function(db, uid) {
+     * Load all student videos from local db
+     **/
+    loadStudentTracks: function(db, uid) {
         var manager = this;
         var trans = db.transaction(["video"]);
         var store = trans.objectStore("video");
-        // Get everything in the store;
-        var keyRange = IDBKeyRange.lowerBound(0);
-        var cursorRequest = store.openCursor(keyRange);
-        var videos = [];
+        var index = store.index('uName');
+        // get only user videos
+        var key = IDBKeyRange.only(uid);
+        var cursorRequest = index.openCursor(key);
         cursorRequest.onsuccess = function(e) {
             var result = e.target.result;
             if ( !! result == false) return;
-            console.log(result.value);
-            videos.push(result.value);
-            manager.addStudentVideo(result.value);
-            
-            result.continue ();
+            manager.addStudentTrack(result.value);
+            result.
+            continue ();
         };
         cursorRequest.onerror = function() {
-            console.log('oups');
+            console.log('error loading videos for user id : ' + uid);
         };
-        return videos;
     },
-    addStudentVideo: function(track) {
-        console.log('track from add student video');
-        console.log(track);
+    /**
+     * Add student track to list
+     **/
+    addStudentTrack: function(track) {
+        var url = window.URL.createObjectURL(track.video);
         // Add track to list (student + models / audio + video / audio / video)
-        /*this.tracks.push(track);
-        // Only video ar shown in list
-        // Remove no track line if needed
-        if (track.owner === 'student') {
-            this.s_container.find('.no-track').remove();
-        } else if (track.owner === 'teacher') {
-            this.t_container.find('.no-track').remove();
-        }
+        this.studentTracks.push(track);
+        // this.studentTracks[track.id] = track;
+        // Remove no track line
+        this.s_container.find('.no-track').remove();
         // Display new track
         var html = '';
-        html += '<tr id="' + track.name + '">';
-        html += '    <td class="text-center"><input type="radio" class="track-select" name="select" id="select-' + track.name + '" value="1"/></td>';
+        html += '<tr id="' + track.id + '" data-name="' + track.tName + '">';
+        html += '    <td class="text-center"><input type="radio" class="track-select" name="select" id="select-' + track.id + '" value="1"/></td>';
         // icone
         html += '    <td>';
         html += '       <span class="h2 glyphicon glyphicon-film"></span> ';
         html += '    </td>';
         // name
-        html += '    <td>' + track.name + '</td>';
+        html += '    <td>' + track.tName + '</td>';
         html += '    <td>';
-        if (track.downloadable) {
-            html += '<button class="track-download btn btn-sm btn-default" role="button" title="download recorded track">';
-            html += '   <span class="glyphicon glyphicon-download-alt"></span>';
-            html += '</button>';
-            // Download button
-            //var file = track.uid + '/' + track.name + '.' + track.extension; //('audio' === track.type ? '.wav' : '.webm');
-            html += '   <a href="download.php?file=' + track.url + '" target="_blank" class="track-download btn btn-sm btn-default" role="button">';
-            html += '       <span class="glyphicon glyphicon-download-alt"></span>';
-            html += '       <span class="sr-only">Download</span>';
-            html += '   </a>';
-        }
-        if (track.deletable) {
-            // Delete button
-            html += '   <button class="track-delete btn btn-sm btn-danger" role="button">';
-            html += '       <span class="glyphicon glyphicon-trash"></span>';
-            html += '       <span class="sr-only">Delete</span>';
-            html += '   </button>';
-        }
+        html += '       <a href="' + url + '" target="_blank" download class="track-download btn btn-sm btn-default" role="button">';
+        html += '           <span class="glyphicon glyphicon-download-alt"></span>';
+        html += '           <span class="sr-only">Download</span>';
+        html += '       </a>';
+        // Delete button
+        html += '       <button class="track-delete btn btn-sm btn-danger" role="button">';
+        html += '           <span class="glyphicon glyphicon-trash"></span>';
+        html += '           <span class="sr-only">Delete</span>';
+        html += '       </button>';
         html += '    </td>';
         this.s_container.append(html);
-        this.toggleDeleteButton();*/
+        this.toggleDeleteButton();
     },
     /**
      * Start playing selected tracks (on both players)
-     */
+     **/
     play: function() {
         this.paused = false;
         var manager = this;
@@ -248,7 +223,7 @@ var TrackManager = {
         this.togglePlayerButtons();
     },
     /**
-     * Pause selected tracks which are currently playing
+     * Pause selected tracks which are currently playing (both players)
      */
     pause: function() {
         this.paused = true;
@@ -264,7 +239,7 @@ var TrackManager = {
         this.togglePlayerButtons();
     },
     /**
-     * Stop selected tracks which are currently playing
+     * Stop selected tracks which are currently playing (both players)
      */
     stop: function() {
         this.paused = false;
@@ -298,7 +273,7 @@ var TrackManager = {
         if ((player1 && ($('#' + player1.media.id).attr('src') !== undefined || $('#' + player1.media.id + ' source').attr('src') !== undefined)) && (player2 && $('#' + player2.media.id).attr('src') !== undefined)) {
             hasSource = true;
         }
-        if ((this.playing.length === 0 || this.paused) && this.tracks.length !== 0 && hasSource) {
+        if ((this.playing.length === 0 || this.paused) && (this.studentTracks.length !== 0 || this.webTracks.length !== 0) && hasSource) {
             enabled = true;
         }
         this.buttonPlay.prop('disabled', !enabled);
@@ -308,7 +283,7 @@ var TrackManager = {
      */
     togglePauseButton: function() {
         var enabled = false;
-        if (this.tracks.length !== 0 && this.playing.length !== 0 && !this.paused) {
+        if ((this.studentTracks.length !== 0 || this.webTracks.length !== 0) && this.playing.length !== 0 && !this.paused) {
             enabled = true;
         }
         this.buttonPause.prop('disabled', !enabled);
@@ -318,7 +293,7 @@ var TrackManager = {
      */
     toggleStopButton: function() {
         var enabled = false;
-        if (this.tracks.length !== 0 && this.playing.length !== 0) {
+        if ((this.studentTracks.length !== 0 || this.webTracks.length !== 0) !== 0 && this.playing.length !== 0) {
             enabled = true;
         }
         this.buttonStop.prop('disabled', !enabled);
@@ -328,29 +303,45 @@ var TrackManager = {
      */
     toggleDeleteButton: function() {
         var enabled = false;
-        if (this.tracks.length !== 0) {
+        if (this.studentTracks.length !== 0) {
             enabled = true;
         }
         this.buttonDelete.prop('disabled', !enabled);
     },
-    /**
-     * Retrieve the track object in tracks list from its name
-     */
-    getTrack: function(fileName) {
+    getStudentTrack: function(id) {
         var track = null;
-        var trackIndex = this.getTrackIndex(fileName);
+        var trackIndex = this.getStudentTrackIndex(id);
         if (null !== trackIndex) {
-            track = this.tracks[trackIndex];
+            track = this.studentTracks[trackIndex];
+        }
+        return track;
+    },
+    getStudentTrackIndex: function(id) {
+        var index = null;
+        for (var i = 0; i < this.studentTracks.length; i++) {
+            var currentTrack = this.studentTracks[i];
+            if (id == currentTrack.id) {
+                index = i;
+                break;
+            }
+        }
+        return index;
+    },
+    getWebTrack: function(name) {
+        var track = null;
+        var trackIndex = this.getWebTrackIndex(name);
+        if (null !== trackIndex) {
+            track = this.webTracks[trackIndex];
         }
         return track;
     },
     /**
      * Retrieve the track index in tracks list from its name
      */
-    getTrackIndex: function(fileName) {
+    getWebTrackIndex: function(name) {
         var index = null;
-        for (var i = 0; i < this.tracks.length; i++) {
-            var currentTrack = this.tracks[i];
+        for (var i = 0; i < this.webTracks.length; i++) {
+            var currentTrack = this.webTracks[i];
             if (fileName == currentTrack['name']) {
                 index = i;
                 break;
@@ -358,10 +349,10 @@ var TrackManager = {
         }
         return index;
     },
-    deletePlaying: function(fileName) {
+    deletePlaying: function(player) {
         for (var i = 0; i < this.playing.length; i++) {
             var currentTrack = this.playing[i];
-            if (fileName == currentTrack) {
+            if (player === currentTrack) {
                 this.playing.splice(i, 1);
                 break;
             }
