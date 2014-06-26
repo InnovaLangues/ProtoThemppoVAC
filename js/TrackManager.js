@@ -187,7 +187,7 @@ var TrackManager = {
         // name
         html += '    <td>' + track.tName + '</td>';
         html += '    <td>';
-        html += '       <a href="' + url + '" target="_blank" download class="track-download btn btn-sm btn-default" role="button">';
+        html += '       <a href="' + url + '" target="_blank" type="application/octet-stream" download class="track-download btn btn-sm btn-default" role="button">';
         html += '           <span class="glyphicon glyphicon-download-alt"></span>';
         html += '           <span class="sr-only">Download</span>';
         html += '       </a>';
@@ -341,8 +341,8 @@ var TrackManager = {
     getWebTrackIndex: function(name) {
         var index = null;
         for (var i = 0; i < this.webTracks.length; i++) {
-            var currentTrack = this.webTracks[i];
-            if (fileName == currentTrack['name']) {
+            var currentTrack = this.webTracks[i];           
+            if (name == currentTrack['name']) {
                 index = i;
                 break;
             }

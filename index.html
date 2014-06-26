@@ -26,7 +26,7 @@
                     </div>
                     <div class="col-md-8">
                         <h1>Themppo <small>Prototype AAC/VAC</small></h1>
-                        <h3>! Only works on Firefox !</h3>
+                        <h3>! Only works on Firefox >= 30 !</h3>
                     </div>
                     <div class="col-md-2">
                         <h4 id="user-name"></h4>
@@ -41,7 +41,7 @@
                     <div class="row">
                         <div class="col-md-12">
                             <div id="video-1-container">
-                                <img width="100%" class="no-video-img" height="270" alt="no image" title="No video" src="media/poster/poster.jpg"/>
+                                <img class="no-video-img" alt="no image" title="No video" src="media/poster/poster.jpg"/>
                             </div>
                         </div>
                     </div>
@@ -58,7 +58,7 @@
                 </div>
                 <!-- SYNC CONTROLS -->
                 <div class="col-md-2">
-                    <div class="panel panel-default top5">
+                    <div class="panel panel-default top10">
                         <div class="panel-heading" style="text-align:center;">
                             <h3 class="panel-title">Sync controls</h3>
                             <button class="btn btn-default glyphicon glyphicon-question-sign" data-toggle="modal" data-target="#sync-help" title="What is that ?">                     
@@ -83,7 +83,7 @@
                     <div class="row">
                         <div class="col-md-12">
                             <div id="video-2-container">
-                                <img width="100%" class="no-video-img" height="270" alt="no image" title="No video" src="media/poster/poster.jpg"/>
+                                <img class="no-video-img" alt="no image" title="No video" src="media/poster/poster.jpg"/>
                             </div>
                         </div>
                     </div>
@@ -104,7 +104,7 @@
                                     <span class="glyphicon glyphicon-trash"></span>
                                 </button>
                                  <!-- WIDHT & HEIGHT MUST BE SET INLINE -->
-                                <canvas id="analyser" title="Mic level" width="25px" height="34px"></canvas>
+                                <canvas id="analyser" title="Mic level" width="20px" height="34px"></canvas>
                             </div>
                         </div>
                     </div>
@@ -218,7 +218,7 @@
                                         <div class="col-md-12">
                                             <div class="tab-pane" id="wtrack">
                                                 <h4>Choose a file from the web by entering an url in the text box</h4>
-                                                <input type="text" id="open-web-video" placeholder="Enter an url" />
+                                                <input type="text" class="form-control input-lg" id="open-web-video" placeholder="Enter an url" />
                                             </div>
                                         </div>
                                     </div>

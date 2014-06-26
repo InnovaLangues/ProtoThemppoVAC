@@ -189,7 +189,8 @@ function init() {
                     videoSrc = $('#open-web-video').val();
                     // create a new youtube video element :
                     var html = '';
-                    html += '<video id="' + fileButtonCaller + '" controls="controls" preload="none" width="100%" height="270">';
+                    // width used to be 100% but this does not work with youtube videos...
+                    html += '<video id="' + fileButtonCaller + '" width="466" height="270" controls="controls" preload="none">';
                     html += '   <source src="' + videoSrc + '" type="video/youtube" ></source>';
                     html += '</video>';
                     // happend html depending on player called
@@ -212,7 +213,7 @@ function init() {
                 // from teacher tracks or student tracks
                 if ('web-track' !== mediaSource && 'local-track' !== mediaSource && hasFile) {
                     var html = '';                   
-                    html += '<video id="' + fileButtonCaller + '"  src="' + videoSrc + '" preload="none" type="' + mime + '" controls="controls" width="100%" height="270">';
+                    html += '<video id="' + fileButtonCaller + '"  src="' + videoSrc + '" width="466" height="270" preload="none" type="' + mime + '" controls="controls">';
                     html += '</video>';
                     if ('video-1' === fileButtonCaller) {
                         $("#video-1-container").children().remove();
@@ -220,8 +221,6 @@ function init() {
                         initPlayer1();
                         TrackManager.togglePlayerButtons(); 
                         TrackManager.player1Track = track;
-
-                    TrackManager.selected.push();0
                     } else if ('video-2' === fileButtonCaller) {
                         $("#video-2-container").children().remove();
                         $("#video-2-container").append(html);
@@ -259,7 +258,7 @@ function init() {
     });
     // delete all recorded tracks confirm OK
     $('#del-all-confirm-dialog').find('.modal-footer #confirm').on('click', function() {
-        var html = '<img width="100%" class="no-video-img" height="270" alt="no image" title="PLease select a video" src="media/poster/poster.jpg"/>';
+        var html = '<img class="no-video-img" alt="no image" title="PLease select a video" src="media/poster/poster.jpg"/>';
         TrackManager.deleteAllStudentTracks(db);
         $("#video-1-container").children().remove();
         $("#video-2-container").children().remove();
@@ -273,7 +272,7 @@ function init() {
         var trackId = $(this).parents('tr').prop('id');
         var el = document.getElementById(trackId);
 
-         var html = '<img width="100%" class="no-video-img" height="270" alt="no image" title="PLease select a video" src="media/poster/poster.jpg"/>';
+         var html = '<img class="no-video-img" alt="no image" title="PLease select a video" src="media/poster/poster.jpg"/>';
   
         // check if the file we want to delete is used by player 1
         if (TrackManager.player1Track && TrackManager.player1Track.tName === el.dataset.name) {
@@ -318,13 +317,13 @@ function init() {
                 // stop vu meter
                 cancelAnalyserUpdates();
                 player2.setSrc(url);
-
+                // save new video on local db
                 var transaction = db.transaction(["video"], "readwrite");
-                var objectStore = transaction.objectStore("video");                    
-                var request = objectStore.put({ uName: userId, video: recorder.getBlob(), tName: fileName, owner: "student" });
+                var objectStore = transaction.objectStore("video");
+                var track = { uName: userId, video: recorder.getBlob(), tName: fileName, owner: "student" };               
+                var request = objectStore.put(track);
                 request.onsuccess = function (evt) {
-                    console.log(evt.target);
-                    TrackManager.loadUserVideos(db, userId);
+                    TrackManager.addStudentTrack(track);
                 };
                 request.onerror = function(e) {
                     console.log(e.value);
@@ -342,7 +341,7 @@ function captureUserMedia(callback) {
     }, function(stream) {
        
         var html = '';
-        html += '<video id="video-2" controls="controls" preload="none" width="100%" height="270">';
+        html += '<video id="video-2" controls="controls" preload="none" width="466" height="270">';
         html += '   <source src="' + window.URL.createObjectURL(stream) + '" type="video/webm" ></source>';
         html += '</video>';
         $("#video-2-container").children().remove();
@@ -366,7 +365,7 @@ function handleFileSelect(evt) {
             return function(e) {
                 if (e.target.result) {
                     var html = '';
-                    html += '<video id="' + fileButtonCaller + '" controls="controls" preload="none"  width="100%" height="270">';
+                    html += '<video id="' + fileButtonCaller + '" controls="controls" preload="none" width="466" height="270">';
                     html += '   <source src="' + e.target.result + '" type="' + theFile.type + '" ></source>';
                     html += '</video>';
                     if ('video-1' === fileButtonCaller) {
@@ -509,6 +508,7 @@ function updateAnalyser(time) {
     }
     // mic input level draw code here
     {
+       
         var array = new Uint8Array(analyserNode.frequencyBinCount);
         analyserNode.getByteFrequencyData(array);
         var average = getAverageVolume(array);
@@ -516,8 +516,9 @@ function updateAnalyser(time) {
         analyserContext.clearRect(0, 0, canvasWidth, canvasHeight);
         // set the fill style
         analyserContext.fillStyle = gradient;
+        var heightGap = canvasHeight - average > 0 ? canvasHeight - average : 0;
         // create the meters
-        analyserContext.fillRect(0, canvasHeight - average, canvasWidth, canvasHeight);
+        analyserContext.fillRect(0, heightGap, canvasWidth, canvasHeight);
     }
     rafID = window.requestAnimationFrame(updateAnalyser);
 }
