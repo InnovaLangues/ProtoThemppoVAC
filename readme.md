@@ -1,4 +1,4 @@
-This branch only works with Firefox. 
+This branch only works with Firefox (v30+)
 
 Features :
 
