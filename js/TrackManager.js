@@ -171,9 +171,8 @@ var TrackManager = {
      **/
     addStudentTrack: function(track) {
         var url = window.URL.createObjectURL(track.video);
-        // Add track to list (student + models / audio + video / audio / video)
+        // Add track to list (student)
         this.studentTracks.push(track);
-        // this.studentTracks[track.id] = track;
         // Remove no track line
         this.s_container.find('.no-track').remove();
         // Display new track
@@ -336,7 +335,7 @@ var TrackManager = {
         return track;
     },
     /**
-     * Retrieve the track index in tracks list from its name
+     * Retrieve the track index in web track list by name
      */
     getWebTrackIndex: function(name) {
         var index = null;

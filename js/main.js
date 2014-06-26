@@ -3,7 +3,6 @@ var player2Ended = false;
 // Connected user
 var userId = '';
 var isStudent = true;
-
 // media source (model, myrecords, web, local)
 var mediaSource = null;
 // html video element 1
@@ -47,11 +46,10 @@ window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.ms
 if (!window.indexedDB) {
     window.alert("Your browser doesn't support a stable version of IndexedDB. Saving your videos will not be available.");
 }
-var dbRequest;
+
 var db;
 const DB_NAME = "videos";
 const DB_VERSION = 3;
-var videoData; // array of videos for the user
 // ON DOCUMENT READY
 $(document).ready(function() {
     // open authentication modal
@@ -61,65 +59,63 @@ $(document).ready(function() {
         "show": true
     };
     $('#authentication-dialog').modal(options);
+    // add keyboard event to modal ok button
+    $('#authentication-dialog').keydown(function(event) {
+        console.log('keydown');
+        // enter key code
+        if (event.which == 13 && false == $('#usr-ok').prop('disabled')) {
+            $('#authentication-dialog').modal('hide');
+        }
+    })
+    // authentication modal show event
     $('#authentication-dialog').on('shown.bs.modal', function(e) {
         $('#usr-ok').prop('disabled', true);
         // firefox keep the login used in the textbox
         if ($('#user').val() !== '') {
             $('#usr-ok').prop('disabled', false);
-        } else {
-            // control text-input
-            $('#user').on('input', function() {
-                if ($(this).val() !== '') {
-                    $('#usr-ok').prop('disabled', false);
-                } else {
-                    $('#usr-ok').prop('disabled', true);
-                }
-            });
         }
+        // control text-input
+        $('#user').on('input', function() {
+            if ($(this).val() !== '') {
+                $('#usr-ok').prop('disabled', false);
+            } else {
+                $('#usr-ok').prop('disabled', true);
+            }
+        });
     });
+    // authentication modal hide event
     $('#authentication-dialog').on('hidden.bs.modal', function(e) {
         // sanitize user_id (for folder creation)
         userId = $('#user').val().replace(' ', '').replace(/[^a-zA-Z0-9]/g, '_');
-        // for display let the user friendly name
+        // for display keep the user friendly name
         $('#user-name').html('<span class="glyphicon glyphicon-user"></span> ' + $('#user').val());
         // init app and bind events
         init();
     });
 });
 // INIT APP & BIND EVENTS
-function init() {    
-
-    dbRequest = window.indexedDB.open(DB_NAME, DB_VERSION);
+function init() {
+    var dbRequest = window.indexedDB.open(DB_NAME, DB_VERSION);
     dbRequest.onerror = function(event) {
         alert("Database error: " + event.target.errorCode);
     };
     dbRequest.onsuccess = function(event) {
         db = dbRequest.result;
         TrackManager.initialize(db, userId);
-        videoData = [];
     };
     dbRequest.onupgradeneeded = function(event) {
-        console.log('on upgrade needed');
-        var db = event.target.result;
+        db = event.target.result;
         // Create an objectStore for this database
         var objectStore = db.createObjectStore("video", {
             keyPath: "id",
             autoIncrement: true
         });
-        // Create an index to search videos by user name. We may have duplicates
-        // so we can't use a unique index.
+        // Create an index to search videos by user name. 
+        // We may have duplicates so we can't use a unique index.
         objectStore.createIndex("uName", "uName", {
             unique: false
         });
-        
-        objectStore.transaction.oncomplete = function(event) {
-            console.log('transaction complete');
-            // Store values in the newly created objectStore.
-            var videosObjectStore = db.transaction("video", "readwrite").objectStore("video");
-            for (var i in videoData) {
-                videosObjectStore.add(videoData[i]);
-            }
-        }
+        objectStore.transaction.oncomplete = function(event) {}
     };
     // stop recording button
     stop = document.getElementById('record-stop');
@@ -155,11 +151,9 @@ function init() {
             }
         }
     });
-    // handle modal file chooser closing event
+    // handle file chooser modal closing event
     $('#file-dialog').on('hidden.bs.modal', function(e) {
-        // disable download 'just recorded file' button
-        //$('#download').prop('enabled', false);
-        $('#download').prop('disabled', true);
+        
         if (fileButtonCaller && fileButtonCaller !== 'undefined') {
             var videoSrc = '';
             //var audioSrc = '';
@@ -212,14 +206,14 @@ function init() {
                 }
                 // from teacher tracks or student tracks
                 if ('web-track' !== mediaSource && 'local-track' !== mediaSource && hasFile) {
-                    var html = '';                   
+                    var html = '';
                     html += '<video id="' + fileButtonCaller + '"  src="' + videoSrc + '" width="466" height="270" preload="none" type="' + mime + '" controls="controls">';
                     html += '</video>';
                     if ('video-1' === fileButtonCaller) {
                         $("#video-1-container").children().remove();
                         $("#video-1-container").append(html);
                         initPlayer1();
-                        TrackManager.togglePlayerButtons(); 
+                        TrackManager.togglePlayerButtons();
                         TrackManager.player1Track = track;
                     } else if ('video-2' === fileButtonCaller) {
                         $("#video-2-container").children().remove();
@@ -252,7 +246,7 @@ function init() {
         }
         $('h5.selected-title').text($(this).text());
     });
-    // delete all recorded tracks show confirm
+    // delete all recorded tracks show confirm modal
     $('body').on('click', '#tracks-delete', this, function(el) {
         $('#del-all-confirm-dialog').modal('show');
     });
@@ -271,23 +265,19 @@ function init() {
         // Get track id
         var trackId = $(this).parents('tr').prop('id');
         var el = document.getElementById(trackId);
-
-         var html = '<img class="no-video-img" alt="no image" title="PLease select a video" src="media/poster/poster.jpg"/>';
-  
+        var html = '<img class="no-video-img" alt="no image" title="PLease select a video" src="media/poster/poster.jpg"/>';
         // check if the file we want to delete is used by player 1
         if (TrackManager.player1Track && TrackManager.player1Track.tName === el.dataset.name) {
             $("#video-1-container").children().remove();
             $("#video-1-container").append(html);
             TrackManager.deletePlaying('video-1');
         }
-
         // check if the file we want to delete is used by player 2
-        if (TrackManager.player2Track  && TrackManager.player2Track.tName === el.dataset.name) {
+        if (TrackManager.player2Track && TrackManager.player2Track.tName === el.dataset.name) {
             $("#video-2-container").children().remove();
             $("#video-2-container").append(html);
             TrackManager.deletePlaying('video-2');
         }
-
         // delete video track (it is a student video)
         TrackManager.deleteStudentTrack(trackId, db);
         TrackManager.togglePlayerButtons();
@@ -296,7 +286,6 @@ function init() {
     record.onclick = function() {
         record.disabled = true;
         stop.disabled = false;
-        audioUploaded = false;
         videoUploaded = false;
         captureUserMedia(function(stream) {
             recorder = RecordRTC(stream, {
@@ -313,16 +302,23 @@ function init() {
         //player2.src = '';
         fileName = generateFileName();
         if (recorder) {
-            recorder.stopRecording(function(url) {           
+            recorder.stopRecording(function(url) {
                 // stop vu meter
                 cancelAnalyserUpdates();
                 player2.setSrc(url);
                 // save new video on local db
                 var transaction = db.transaction(["video"], "readwrite");
                 var objectStore = transaction.objectStore("video");
-                var track = { uName: userId, video: recorder.getBlob(), tName: fileName, owner: "student" };               
+                var track = {
+                    uName: userId,
+                    video: recorder.getBlob(),
+                    tName: fileName,
+                    owner: "student"
+                };
                 var request = objectStore.put(track);
-                request.onsuccess = function (evt) {
+                request.onsuccess = function(evt) {
+                    // get inserted item id
+                    track.id = evt.target.result;
                     TrackManager.addStudentTrack(track);
                 };
                 request.onerror = function(e) {
@@ -339,7 +335,6 @@ function captureUserMedia(callback) {
         audio: true,
         video: true
     }, function(stream) {
-       
         var html = '';
         html += '<video id="video-2" controls="controls" preload="none" width="466" height="270">';
         html += '   <source src="' + window.URL.createObjectURL(stream) + '" type="video/webm" ></source>';
@@ -351,7 +346,6 @@ function captureUserMedia(callback) {
         player2.setMuted(true);
         callback(stream);
         gotStream(stream);
-
     }, function(error) {
         console.error(error);
     });
@@ -409,8 +403,6 @@ function getUser() {
     var uid = date.getMonth().toString() + date.getDate().toString() + date.getMinutes().toString() + date.getSeconds().toString() + date.getMilliseconds().toString() + (Math.random() * Math.pow(36, 4) << 0).toString(36).slice(-4);
     return uid;
 }
-
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // MEDIAELEMENT JS PLAYERS 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -418,6 +410,7 @@ function initPlayer1() {
     player1 = new MediaElementPlayer('#video-1', {
         enableAutosize: false,
         pauseOtherPlayers: false,
+        startVolume: 0.8,
         features: ['playpause', 'progress', 'current', 'duration', 'tracks', 'volume'],
         success: function(mediaElement, domObject) {
             mediaElement.addEventListener('ended', function(e) {
@@ -436,6 +429,7 @@ function initPlayer2() {
     player2 = new MediaElementPlayer('#video-2', {
         enableAutosize: false,
         pauseOtherPlayers: false,
+        startVolume: 0.8,
         features: ['playpause', 'progress', 'current', 'duration', 'tracks', 'volume'],
         success: function(mediaElement, domObject) {
             mediaElement.addEventListener('ended', function(e) {
@@ -508,7 +502,6 @@ function updateAnalyser(time) {
     }
     // mic input level draw code here
     {
-       
         var array = new Uint8Array(analyserNode.frequencyBinCount);
         analyserNode.getByteFrequencyData(array);
         var average = getAverageVolume(array);
