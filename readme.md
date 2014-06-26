@@ -1,1 +1,11 @@
-Master is now working with Firefox only and record int he same file video and audio!
+This branch only works with Firefox. 
+
+Features :
+
+- record audio and video in one file (webm container)
+- save students videos using indexedDB
+
+Known bugs :
+
+- can not replay a recorded video
+- can not use video player slider to navigate through video (only for recorded videos)
