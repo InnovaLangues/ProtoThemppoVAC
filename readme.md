@@ -9,3 +9,5 @@ Known bugs :
 
 - can not replay a recorded video
 - can not use video player slider to navigate through video (only for recorded videos)
+
+That's all folks
