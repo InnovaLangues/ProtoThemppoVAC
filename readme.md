@@ -1,4 +1,4 @@
-This branch only works with Firefox (v30+)
+This branch only works with Firefox (v29+)
 
 ## Features :
 
@@ -11,7 +11,7 @@ This branch only works with Firefox (v30+)
 - can not use video player slider to navigate through video (only for recorded videos)
 
 
-## Uses [RecrdRTC](https://www.webrtc-experiment.com/RecordRTC/AudioVideo-on-Firefox.html)
+## Uses [RecordRTC](https://www.webrtc-experiment.com/RecordRTC/AudioVideo-on-Firefox.html)
 
 How RecordRTC encodes wav/webm?
 
