@@ -46,7 +46,6 @@ window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.ms
 if (!window.indexedDB) {
     window.alert("Your browser doesn't support a stable version of IndexedDB. Saving your videos will not be available.");
 }
-
 var db;
 const DB_NAME = "videos";
 const DB_VERSION = 3;
@@ -61,7 +60,6 @@ $(document).ready(function() {
     $('#authentication-dialog').modal(options);
     // add keyboard event to modal ok button
     $('#authentication-dialog').keydown(function(event) {
-        console.log('keydown');
         // enter key code
         if (event.which == 13 && false == $('#usr-ok').prop('disabled')) {
             $('#authentication-dialog').modal('hide');
@@ -153,10 +151,8 @@ function init() {
     });
     // handle file chooser modal closing event
     $('#file-dialog').on('hidden.bs.modal', function(e) {
-        
         if (fileButtonCaller && fileButtonCaller !== 'undefined') {
             var videoSrc = '';
-            //var audioSrc = '';
             var mime = '';
             var hasFile = false;
             var track;
@@ -299,31 +295,35 @@ function init() {
         record.disabled = false;
         stop.disabled = true;
         player2.setSrc('');
-        //player2.src = '';
         fileName = generateFileName();
         if (recorder) {
             recorder.stopRecording(function(url) {
                 // stop vu meter
                 cancelAnalyserUpdates();
                 player2.setSrc(url);
+                player2.setMuted(false);
                 // save new video on local db
-                var transaction = db.transaction(["video"], "readwrite");
-                var objectStore = transaction.objectStore("video");
-                var track = {
-                    uName: userId,
-                    video: recorder.getBlob(),
-                    tName: fileName,
-                    owner: "student"
-                };
-                var request = objectStore.put(track);
-                request.onsuccess = function(evt) {
-                    // get inserted item id
-                    track.id = evt.target.result;
-                    TrackManager.addStudentTrack(track);
-                };
-                request.onerror = function(e) {
-                    console.log(e.value);
-                };
+                try {
+                    var transaction = db.transaction(["video"], "readwrite");
+                    var objectStore = transaction.objectStore("video");
+                    var track = {
+                        uName: userId,
+                        video: recorder.getBlob(),
+                        tName: fileName,
+                        owner: "student"
+                    };
+                    var request = objectStore.put(track);
+                    request.onsuccess = function(evt) {
+                        // get inserted item id
+                        track.id = evt.target.result;
+                        TrackManager.addStudentTrack(track);
+                    };
+                    request.onerror = function(e) {
+                        console.log(e.value);
+                    };
+                } catch (e) {
+                    console.log(e);
+                }
             });
         }
     };
@@ -347,7 +347,7 @@ function captureUserMedia(callback) {
         callback(stream);
         gotStream(stream);
     }, function(error) {
-        console.error(error);
+        console.log(error);
     });
 }
 // local file selection
