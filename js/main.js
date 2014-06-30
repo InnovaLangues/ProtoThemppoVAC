@@ -285,7 +285,7 @@ function init() {
         videoUploaded = false;
         captureUserMedia(function(stream) {
             recorder = RecordRTC(stream, {
-                //autoWriteToDisk: true
+                type: 'video'
             });
             recorder.startRecording();
         });
