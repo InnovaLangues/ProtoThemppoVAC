@@ -179,8 +179,8 @@ function init() {
                     videoSrc = $('#open-web-video').val();
                     // create a new youtube video element :
                     var html = '';
-                    // width used to be 100% but this does not work with youtube videos...
-                    html += '<video id="' + fileButtonCaller + '" width="466" height="270" controls="controls" preload="none">';
+                    // set width anf height in order to play youtube video correctly (sort of hack)
+                    html += '<video id="' + fileButtonCaller + '" width="465" height="270" controls="controls" preload="none">';
                     html += '   <source src="' + videoSrc + '" type="video/youtube" ></source>';
                     html += '</video>';
                     // happend html depending on player called
@@ -203,7 +203,7 @@ function init() {
                 // from teacher tracks or student tracks
                 if ('web-track' !== mediaSource && 'local-track' !== mediaSource && hasFile) {
                     var html = '';
-                    html += '<video id="' + fileButtonCaller + '"  src="' + videoSrc + '" width="466" height="270" preload="none" type="' + mime + '" controls="controls">';
+                    html += '<video id="' + fileButtonCaller + '"  src="' + videoSrc + '" width="100%" height="270" preload="none" type="' + mime + '" controls="controls">';
                     html += '</video>';
                     if ('video-1' === fileButtonCaller) {
                         $("#video-1-container").children().remove();
@@ -317,6 +317,7 @@ function init() {
                         // get inserted item id
                         track.id = evt.target.result;
                         TrackManager.addStudentTrack(track);
+                        TrackManager.player2Track = track;
                     };
                     request.onerror = function(e) {
                         console.log(e.value);
@@ -336,7 +337,8 @@ function captureUserMedia(callback) {
         video: true
     }, function(stream) {
         var html = '';
-        html += '<video id="video-2" controls="controls" preload="none" width="466" height="270">';
+        //html += '<video id="video-2" controls="controls" preload="none" width="466" height="270">';
+        html += '<video id="video-2" controls="controls" preload="none" width="100%" height="270">';
         html += '   <source src="' + window.URL.createObjectURL(stream) + '" type="video/webm" ></source>';
         html += '</video>';
         $("#video-2-container").children().remove();
@@ -359,7 +361,7 @@ function handleFileSelect(evt) {
             return function(e) {
                 if (e.target.result) {
                     var html = '';
-                    html += '<video id="' + fileButtonCaller + '" controls="controls" preload="none" width="466" height="270">';
+                    html += '<video id="' + fileButtonCaller + '" controls="controls" preload="none" width="100%" height="270">';
                     html += '   <source src="' + e.target.result + '" type="' + theFile.type + '" ></source>';
                     html += '</video>';
                     if ('video-1' === fileButtonCaller) {
@@ -417,6 +419,13 @@ function initPlayer1() {
                 player1Ended = true;
                 TrackManager.deletePlaying('video-1');
                 TrackManager.togglePlayerButtons();
+                var current = TrackManager.player1Track;
+                // check that it is a webm firefox recorded track
+                if(current.video){
+                    player1.pause();
+                    player1.setCurrentTime(0);
+                    player1.setSrc(URL.createObjectURL(current.video));
+                }
             }, false);
         },
         error: function() {
@@ -436,6 +445,13 @@ function initPlayer2() {
                 player2Ended = true;
                 TrackManager.deletePlaying('video-2');
                 TrackManager.togglePlayerButtons();
+                var current = TrackManager.player2Track;
+                // check that it is a webm firefox recorded track
+                if(current.video){
+                    player2.pause();
+                    player2.setCurrentTime(0);
+                    player2.setSrc(URL.createObjectURL(current.video));
+                }
             }, false);
         },
         error: function() {

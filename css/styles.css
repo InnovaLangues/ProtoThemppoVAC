@@ -56,18 +56,32 @@ div.fileinputs input.file {
 .video-container {
     border: 1px #ddd solid;
     border-radius: 5px;
-    padding: 10px;
-    
+    padding: 10px;    
+}
+/*
+.video-container embed{
+    width: 100% !important;
+    height: auto;
 }
 
+
+.mejs-layers .mejs-layer{    
+  width: 100% !important;
+  height: 100% !important; 
+}
+*/
+/*.me-plugin > embed{
+    width: 100% !important;
+    height: auto;
+}*/
 video{
     width: 100%;
     height: 270px;
 }
 
-.no-video-img{
-    width: 100%;
-    height: 270px;
+.mejs-container{
+  width: 100% !important;
+  /*height: 100% !important;*/
 }
 
 .shadow{
