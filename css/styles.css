@@ -10,26 +10,33 @@
     vertical-align: middle;
     float:right;
 }
-div.fileinputs {
-    position: relative;
-}
-div.fakefile {
-    position: absolute;
-    top: 0px;
-    left: 0px;
-    z-index: 1;
-}
-div.fileinputs input.file {
-    position: relative;
-    text-align: right;
-    opacity: 0;
-    filter: alpha(opacity: 0);
-    opacity: 0;
-    z-index: 2;
-}
+
 .file-type-chooser {
     padding-bottom: 10px;
 }
+.control-container {
+    border-top: 1px #ddd solid;
+    margin: 10px;
+    padding: 5px;
+}
+
+.video-container {
+    border: 1px #ddd solid;
+    border-radius: 5px;
+    padding: 10px;    
+}
+
+video{
+    width: 100%;
+    height: 270px;
+}
+
+
+.shadow{
+    box-shadow: 1px 1px 5px 1px rgba(0, 0, 0, 0.2);
+    /*text-align: center;*/
+}
+
 .top5 {
     margin-top: 5px;
 }
@@ -47,44 +54,4 @@ div.fileinputs input.file {
 }
 .top30 {
     margin-top: 30px;
-}
-.control-container {
-    border-top: 1px #ddd solid;
-    margin: 10px;
-    padding: 5px;
-}
-.video-container {
-    border: 1px #ddd solid;
-    border-radius: 5px;
-    padding: 10px;    
-}
-/*
-.video-container embed{
-    width: 100% !important;
-    height: auto;
-}
-
-
-.mejs-layers .mejs-layer{    
-  width: 100% !important;
-  height: 100% !important; 
-}
-*/
-/*.me-plugin > embed{
-    width: 100% !important;
-    height: auto;
-}*/
-video{
-    width: 100%;
-    height: 270px;
-}
-
-.mejs-container{
-  width: 100% !important;
-  /*height: 100% !important;*/
-}
-
-.shadow{
-    box-shadow: 1px 1px 5px 1px rgba(0, 0, 0, 0.2);
-    text-align: center;
 }
