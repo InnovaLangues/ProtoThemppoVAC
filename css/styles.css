@@ -26,6 +26,11 @@
     padding: 10px;    
 }
 
+.no-video-img{
+    width: 100%;
+    height: 270px;
+}
+
 video{
     width: 100%;
     height: 270px;

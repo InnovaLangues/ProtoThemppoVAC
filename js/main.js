@@ -249,6 +249,7 @@ function init() {
     // delete all recorded tracks confirm OK
     $('#del-all-confirm-dialog').find('.modal-footer #confirm').on('click', function() {
         var html = '<img class="no-video-img" alt="no image" title="PLease select a video" src="media/poster/poster.jpg"/>';
+        //width="100%" height="270"
         TrackManager.deleteAllStudentTracks(db);
         $("#video-1-container").children().remove();
         $("#video-2-container").children().remove();
