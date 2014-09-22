@@ -1,14 +1,18 @@
 This branch only works with Firefox (v29+)
 
-## Features :
+## Features:
 
 - record audio and video in one file (webm container)
 - save students videos using indexedDB
 
-## Known bugs :
+## Known bugs:
 
 - can not replay a recorded video
 - can not use video player slider to navigate through video (only for recorded videos)
+
+## Known problems:
+
+- indexedDB does not work in private browsing mode
 
 
 ## Uses [RecordRTC](https://www.webrtc-experiment.com/RecordRTC/AudioVideo-on-Firefox.html)
